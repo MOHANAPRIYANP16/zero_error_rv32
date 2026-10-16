@@ -1,0 +1,987 @@
+
+integrated_demo.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+    .global _start
+    .type _start, @function
+
+_start:
+    /* Disable interrupts / setup stack pointer at top of Data RAM */
+    la   sp, _stack_top
+   0:	10002117          	auipc	sp,0x10002
+   4:	00010113          	mv	sp,sp
+
+    /* Zero out the .bss section */
+    la   a0, _sbss
+   8:	10000517          	auipc	a0,0x10000
+   c:	ff850513          	addi	a0,a0,-8 # 10000000 <_ebss>
+    la   a1, _ebss
+  10:	10000597          	auipc	a1,0x10000
+  14:	ff058593          	addi	a1,a1,-16 # 10000000 <_ebss>
+    bge  a0, a1, 2f
+  18:	00b55863          	bge	a0,a1,28 <_start+0x28>
+1:
+    sw   zero, 0(a0)
+  1c:	00052023          	sw	zero,0(a0)
+    addi a0, a0, 4
+  20:	00450513          	addi	a0,a0,4
+    blt  a0, a1, 1b
+  24:	feb54ce3          	blt	a0,a1,1c <_start+0x1c>
+2:
+
+    /* Copy initialized .data section from Code ROM (LMA) to Data RAM (VMA) */
+    la   a0, _sdata
+  28:	10000517          	auipc	a0,0x10000
+  2c:	fd850513          	addi	a0,a0,-40 # 10000000 <_ebss>
+    la   a1, _edata
+  30:	10000597          	auipc	a1,0x10000
+  34:	fd058593          	addi	a1,a1,-48 # 10000000 <_ebss>
+    la   a2, _sidata
+  38:	00001617          	auipc	a2,0x1
+  3c:	af060613          	addi	a2,a2,-1296 # b28 <_sidata>
+    bge  a0, a1, 4f
+  40:	00b55c63          	bge	a0,a1,58 <_start+0x58>
+3:
+    lw   t0, 0(a2)
+  44:	00062283          	lw	t0,0(a2)
+    sw   t0, 0(a0)
+  48:	00552023          	sw	t0,0(a0)
+    addi a0, a0, 4
+  4c:	00450513          	addi	a0,a0,4
+    addi a2, a2, 4
+  50:	00460613          	addi	a2,a2,4
+    blt  a0, a1, 3b
+  54:	feb548e3          	blt	a0,a1,44 <_start+0x44>
+4:
+
+    /* Call application entry point */
+    call main
+  58:	00000097          	auipc	ra,0x0
+  5c:	00c080e7          	jalr	12(ra) # 64 <main>
+
+00000060 <hang>:
+
+    /* Trap loop if main() exits */
+hang:
+    j    hang
+  60:	0000006f          	j	60 <hang>
+
+00000064 <main>:
+        kprintf("PASS: RAM verified!\n");
+    }
+}
+
+int main(void)
+{
+  64:	fd010113          	addi	sp,sp,-48 # 10001fd0 <_ebss+0x1fd0>
+    uart_init(UART_BAUD_115200);
+  68:	00400513          	li	a0,4
+{
+  6c:	02112623          	sw	ra,44(sp)
+  70:	01412c23          	sw	s4,24(sp)
+  74:	01512a23          	sw	s5,20(sp)
+  78:	01612823          	sw	s6,16(sp)
+  7c:	01712623          	sw	s7,12(sp)
+  80:	01812423          	sw	s8,8(sp)
+  84:	01912223          	sw	s9,4(sp)
+  88:	01a12023          	sw	s10,0(sp)
+  8c:	02812423          	sw	s0,40(sp)
+  90:	02912223          	sw	s1,36(sp)
+  94:	03212023          	sw	s2,32(sp)
+  98:	01312e23          	sw	s3,28(sp)
+    uart_init(UART_BAUD_115200);
+  9c:	00000097          	auipc	ra,0x0
+  a0:	640080e7          	jalr	1600(ra) # 6dc <uart_init>
+    i2c_init(I2C_SPEED_STD_100K);
+  a4:	00100513          	li	a0,1
+  a8:	00000097          	auipc	ra,0x0
+  ac:	740080e7          	jalr	1856(ra) # 7e8 <i2c_init>
+    gpio_set_leds(0x0001);
+  b0:	00100513          	li	a0,1
+  b4:	00000097          	auipc	ra,0x0
+  b8:	6ec080e7          	jalr	1772(ra) # 7a0 <gpio_set_leds>
+
+    delay_ms(100);
+  bc:	06400513          	li	a0,100
+  c0:	00000097          	auipc	ra,0x0
+  c4:	3ac080e7          	jalr	940(ra) # 46c <delay_ms>
+    kprintf("\n=== RV32I SoC Menu ===\n");
+  c8:	000017b7          	lui	a5,0x1
+  cc:	93c78a13          	addi	s4,a5,-1732 # 93c <__modsi3+0x30>
+    kprintf("1: Blink LEDs\n");
+  d0:	000017b7          	lui	a5,0x1
+  d4:	95878a93          	addi	s5,a5,-1704 # 958 <__modsi3+0x4c>
+    kprintf("2: Read Inputs\n");
+  d8:	000017b7          	lui	a5,0x1
+  dc:	96878b13          	addi	s6,a5,-1688 # 968 <__modsi3+0x5c>
+    kprintf("3: Scan I2C\n");
+  e0:	000017b7          	lui	a5,0x1
+  e4:	97878b93          	addi	s7,a5,-1672 # 978 <__modsi3+0x6c>
+    kprintf("4: SoC Info\n");
+  e8:	000017b7          	lui	a5,0x1
+  ec:	98878c13          	addi	s8,a5,-1656 # 988 <__modsi3+0x7c>
+    kprintf("5: Test RAM\n");
+  f0:	000017b7          	lui	a5,0x1
+  f4:	99878c93          	addi	s9,a5,-1640 # 998 <__modsi3+0x8c>
+    kprintf("Select (1-5): ");
+  f8:	000017b7          	lui	a5,0x1
+  fc:	9a878d13          	addi	s10,a5,-1624 # 9a8 <__modsi3+0x9c>
+    kprintf("\n=== RV32I SoC Menu ===\n");
+ 100:	000a0513          	mv	a0,s4
+ 104:	00000097          	auipc	ra,0x0
+ 108:	388080e7          	jalr	904(ra) # 48c <kprintf>
+    kprintf("1: Blink LEDs\n");
+ 10c:	000a8513          	mv	a0,s5
+ 110:	00000097          	auipc	ra,0x0
+ 114:	37c080e7          	jalr	892(ra) # 48c <kprintf>
+    kprintf("2: Read Inputs\n");
+ 118:	000b0513          	mv	a0,s6
+ 11c:	00000097          	auipc	ra,0x0
+ 120:	370080e7          	jalr	880(ra) # 48c <kprintf>
+    kprintf("3: Scan I2C\n");
+ 124:	000b8513          	mv	a0,s7
+ 128:	00000097          	auipc	ra,0x0
+ 12c:	364080e7          	jalr	868(ra) # 48c <kprintf>
+    kprintf("4: SoC Info\n");
+ 130:	000c0513          	mv	a0,s8
+ 134:	00000097          	auipc	ra,0x0
+ 138:	358080e7          	jalr	856(ra) # 48c <kprintf>
+    kprintf("5: Test RAM\n");
+ 13c:	000c8513          	mv	a0,s9
+ 140:	00000097          	auipc	ra,0x0
+ 144:	34c080e7          	jalr	844(ra) # 48c <kprintf>
+    kprintf("Select (1-5): ");
+ 148:	000d0513          	mv	a0,s10
+ 14c:	00000097          	auipc	ra,0x0
+ 150:	340080e7          	jalr	832(ra) # 48c <kprintf>
+
+    while (1) {
+        print_menu();
+        char choice = uart_getc();
+ 154:	00000097          	auipc	ra,0x0
+ 158:	5e8080e7          	jalr	1512(ra) # 73c <uart_getc>
+        kprintf("%c\n", choice);
+ 15c:	00050593          	mv	a1,a0
+        char choice = uart_getc();
+ 160:	00050413          	mv	s0,a0
+        kprintf("%c\n", choice);
+ 164:	00001537          	lui	a0,0x1
+ 168:	9b850513          	addi	a0,a0,-1608 # 9b8 <__modsi3+0xac>
+ 16c:	00000097          	auipc	ra,0x0
+ 170:	320080e7          	jalr	800(ra) # 48c <kprintf>
+
+        switch (choice) {
+ 174:	fcf40593          	addi	a1,s0,-49
+ 178:	0ff5f593          	zext.b	a1,a1
+ 17c:	00400793          	li	a5,4
+ 180:	1ab7ee63          	bltu	a5,a1,33c <main+0x2d8>
+ 184:	000017b7          	lui	a5,0x1
+ 188:	b1478793          	addi	a5,a5,-1260 # b14 <__modsi3+0x208>
+ 18c:	00259593          	slli	a1,a1,0x2
+ 190:	00f585b3          	add	a1,a1,a5
+ 194:	0005a783          	lw	a5,0(a1)
+ 198:	00078067          	jr	a5
+            case '1': {
+                kprintf("Blinking...\n");
+ 19c:	00001537          	lui	a0,0x1
+ 1a0:	9bc50513          	addi	a0,a0,-1604 # 9bc <__modsi3+0xb0>
+                for (int i = 0; i < 4; i++) {
+                    gpio_set_leds(0xFFFF);
+ 1a4:	000104b7          	lui	s1,0x10
+                kprintf("Blinking...\n");
+ 1a8:	00000097          	auipc	ra,0x0
+ 1ac:	2e4080e7          	jalr	740(ra) # 48c <kprintf>
+ 1b0:	00400413          	li	s0,4
+                    gpio_set_leds(0xFFFF);
+ 1b4:	fff48493          	addi	s1,s1,-1 # ffff <_sidata+0xf4d7>
+ 1b8:	00048513          	mv	a0,s1
+ 1bc:	00000097          	auipc	ra,0x0
+ 1c0:	5e4080e7          	jalr	1508(ra) # 7a0 <gpio_set_leds>
+                    delay_ms(150);
+ 1c4:	09600513          	li	a0,150
+ 1c8:	00000097          	auipc	ra,0x0
+ 1cc:	2a4080e7          	jalr	676(ra) # 46c <delay_ms>
+                    gpio_set_leds(0x0000);
+ 1d0:	00000513          	li	a0,0
+ 1d4:	00000097          	auipc	ra,0x0
+ 1d8:	5cc080e7          	jalr	1484(ra) # 7a0 <gpio_set_leds>
+                    delay_ms(150);
+ 1dc:	09600513          	li	a0,150
+                for (int i = 0; i < 4; i++) {
+ 1e0:	fff40413          	addi	s0,s0,-1
+                    delay_ms(150);
+ 1e4:	00000097          	auipc	ra,0x0
+ 1e8:	288080e7          	jalr	648(ra) # 46c <delay_ms>
+                for (int i = 0; i < 4; i++) {
+ 1ec:	fc0416e3          	bnez	s0,1b8 <main+0x154>
+                }
+                kprintf("Done.\n");
+ 1f0:	00001537          	lui	a0,0x1
+ 1f4:	9cc50513          	addi	a0,a0,-1588 # 9cc <__modsi3+0xc0>
+            case '5': {
+                test_ram();
+                break;
+            }
+            default: {
+                kprintf("Invalid.\n");
+ 1f8:	00000097          	auipc	ra,0x0
+ 1fc:	294080e7          	jalr	660(ra) # 48c <kprintf>
+                break;
+ 200:	f01ff06f          	j	100 <main+0x9c>
+                uint16_t in_val = gpio_get_inputs();
+ 204:	00000097          	auipc	ra,0x0
+ 208:	5a8080e7          	jalr	1448(ra) # 7ac <gpio_get_inputs>
+ 20c:	00050413          	mv	s0,a0
+                kprintf("Inputs: 0x%x\n", in_val);
+ 210:	00050593          	mv	a1,a0
+ 214:	00001537          	lui	a0,0x1
+ 218:	9d450513          	addi	a0,a0,-1580 # 9d4 <__modsi3+0xc8>
+ 21c:	00000097          	auipc	ra,0x0
+ 220:	270080e7          	jalr	624(ra) # 48c <kprintf>
+                gpio_set_leds(in_val);
+ 224:	00040513          	mv	a0,s0
+ 228:	00000097          	auipc	ra,0x0
+ 22c:	578080e7          	jalr	1400(ra) # 7a0 <gpio_set_leds>
+                break;
+ 230:	ed1ff06f          	j	100 <main+0x9c>
+                kprintf("Scanning I2C...\n");
+ 234:	00001537          	lui	a0,0x1
+ 238:	9e450513          	addi	a0,a0,-1564 # 9e4 <__modsi3+0xd8>
+ 23c:	00000097          	auipc	ra,0x0
+ 240:	250080e7          	jalr	592(ra) # 48c <kprintf>
+                        kprintf("Found: 0x%x\n", a);
+ 244:	000017b7          	lui	a5,0x1
+                kprintf("Scanning I2C...\n");
+ 248:	00800413          	li	s0,8
+                int found = 0;
+ 24c:	00000493          	li	s1,0
+                        kprintf("Found: 0x%x\n", a);
+ 250:	9f878993          	addi	s3,a5,-1544 # 9f8 <__modsi3+0xec>
+                for (uint8_t a = 0x08; a <= 0x77; a++) {
+ 254:	07800913          	li	s2,120
+                    if (i2c_ping(a)) {
+ 258:	0ff47513          	zext.b	a0,s0
+ 25c:	00000097          	auipc	ra,0x0
+ 260:	608080e7          	jalr	1544(ra) # 864 <i2c_ping>
+ 264:	00050c63          	beqz	a0,27c <main+0x218>
+                        kprintf("Found: 0x%x\n", a);
+ 268:	00040593          	mv	a1,s0
+ 26c:	00098513          	mv	a0,s3
+ 270:	00000097          	auipc	ra,0x0
+ 274:	21c080e7          	jalr	540(ra) # 48c <kprintf>
+                        found++;
+ 278:	00148493          	addi	s1,s1,1
+                for (uint8_t a = 0x08; a <= 0x77; a++) {
+ 27c:	00140413          	addi	s0,s0,1
+ 280:	fd241ce3          	bne	s0,s2,258 <main+0x1f4>
+                kprintf("Total: %d\n", found);
+ 284:	00001537          	lui	a0,0x1
+ 288:	00048593          	mv	a1,s1
+ 28c:	a0850513          	addi	a0,a0,-1528 # a08 <__modsi3+0xfc>
+ 290:	00000097          	auipc	ra,0x0
+ 294:	1fc080e7          	jalr	508(ra) # 48c <kprintf>
+                break;
+ 298:	e69ff06f          	j	100 <main+0x9c>
+                kprintf("\nSoC Info:\n");
+ 29c:	00001537          	lui	a0,0x1
+ 2a0:	a1450513          	addi	a0,a0,-1516 # a14 <__modsi3+0x108>
+ 2a4:	00000097          	auipc	ra,0x0
+ 2a8:	1e8080e7          	jalr	488(ra) # 48c <kprintf>
+                kprintf("Clk: 25MHz, ISA: RV32I\n");
+ 2ac:	00001537          	lui	a0,0x1
+ 2b0:	a2050513          	addi	a0,a0,-1504 # a20 <__modsi3+0x114>
+ 2b4:	00000097          	auipc	ra,0x0
+ 2b8:	1d8080e7          	jalr	472(ra) # 48c <kprintf>
+                kprintf("ROM: 4KB @ 0x0, RAM: 8KB @ 0x10000000\n");
+ 2bc:	00001537          	lui	a0,0x1
+ 2c0:	a3850513          	addi	a0,a0,-1480 # a38 <__modsi3+0x12c>
+ 2c4:	00000097          	auipc	ra,0x0
+ 2c8:	1c8080e7          	jalr	456(ra) # 48c <kprintf>
+                kprintf("UART: 0x20000000, GPIO: 0x30000000\n");
+ 2cc:	00001537          	lui	a0,0x1
+ 2d0:	a6050513          	addi	a0,a0,-1440 # a60 <__modsi3+0x154>
+ 2d4:	f25ff06f          	j	1f8 <main+0x194>
+    kprintf("\nTesting 8KB Data RAM...\n");
+ 2d8:	00001537          	lui	a0,0x1
+ 2dc:	a8450513          	addi	a0,a0,-1404 # a84 <__modsi3+0x178>
+ 2e0:	00000097          	auipc	ra,0x0
+ 2e4:	1ac080e7          	jalr	428(ra) # 48c <kprintf>
+    for (int i = 0; i < 32; i++) {
+ 2e8:	00000593          	li	a1,0
+        uint32_t pat = 0xA5A50000 | (uint32_t)i;
+ 2ec:	a5a50637          	lui	a2,0xa5a50
+        ram[i] = pat;
+ 2f0:	10000537          	lui	a0,0x10000
+    for (int i = 0; i < 32; i++) {
+ 2f4:	02000713          	li	a4,32
+        ram[i] = pat;
+ 2f8:	00259793          	slli	a5,a1,0x2
+ 2fc:	00a787b3          	add	a5,a5,a0
+        uint32_t pat = 0xA5A50000 | (uint32_t)i;
+ 300:	00c5e6b3          	or	a3,a1,a2
+        ram[i] = pat;
+ 304:	00d7a023          	sw	a3,0(a5)
+        if (ram[i] != pat) {
+ 308:	0007a803          	lw	a6,0(a5)
+ 30c:	01068e63          	beq	a3,a6,328 <main+0x2c4>
+            kprintf("FAIL at %d: 0x%x != 0x%x\n", i, ram[i], pat);
+ 310:	0007a603          	lw	a2,0(a5)
+ 314:	00001537          	lui	a0,0x1
+ 318:	aa050513          	addi	a0,a0,-1376 # aa0 <__modsi3+0x194>
+ 31c:	00000097          	auipc	ra,0x0
+ 320:	170080e7          	jalr	368(ra) # 48c <kprintf>
+    if (pass) {
+ 324:	dddff06f          	j	100 <main+0x9c>
+    for (int i = 0; i < 32; i++) {
+ 328:	00158593          	addi	a1,a1,1
+ 32c:	fce596e3          	bne	a1,a4,2f8 <main+0x294>
+        kprintf("PASS: RAM verified!\n");
+ 330:	00001537          	lui	a0,0x1
+ 334:	abc50513          	addi	a0,a0,-1348 # abc <__modsi3+0x1b0>
+ 338:	ec1ff06f          	j	1f8 <main+0x194>
+                kprintf("Invalid.\n");
+ 33c:	00001537          	lui	a0,0x1
+ 340:	ad450513          	addi	a0,a0,-1324 # ad4 <__modsi3+0x1c8>
+ 344:	eb5ff06f          	j	1f8 <main+0x194>
+
+00000348 <print_num>:
+    }
+    return len;
+}
+
+static void print_num(uint32_t val, uint32_t base, bool uppercase, bool is_signed)
+{
+ 348:	fb010113          	addi	sp,sp,-80
+ 34c:	04812423          	sw	s0,72(sp)
+ 350:	03612823          	sw	s6,48(sp)
+ 354:	04112623          	sw	ra,76(sp)
+ 358:	04912223          	sw	s1,68(sp)
+ 35c:	05212023          	sw	s2,64(sp)
+ 360:	03312e23          	sw	s3,60(sp)
+ 364:	03412c23          	sw	s4,56(sp)
+ 368:	03512a23          	sw	s5,52(sp)
+ 36c:	00050413          	mv	s0,a0
+ 370:	00058b13          	mv	s6,a1
+    char buf[32];
+    int idx = 0;
+
+    if (is_signed && ((int32_t)val < 0)) {
+ 374:	0a055c63          	bgez	a0,42c <print_num+0xe4>
+ 378:	0a068a63          	beqz	a3,42c <print_num+0xe4>
+        uart_putc('-');
+ 37c:	02d00513          	li	a0,45
+ 380:	00c12623          	sw	a2,12(sp)
+ 384:	00000097          	auipc	ra,0x0
+ 388:	370080e7          	jalr	880(ra) # 6f4 <uart_putc>
+        val = (uint32_t)(-(int32_t)val);
+ 38c:	00c12603          	lw	a2,12(sp)
+ 390:	40800433          	neg	s0,s0
+    if (val == 0) {
+        uart_putc('0');
+        return;
+    }
+
+    const char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+ 394:	0c061663          	bnez	a2,460 <print_num+0x118>
+ 398:	00001937          	lui	s2,0x1
+ 39c:	ae090913          	addi	s2,s2,-1312 # ae0 <__modsi3+0x1d4>
+
+    while (val > 0) {
+ 3a0:	01010993          	addi	s3,sp,16
+{
+ 3a4:	00000493          	li	s1,0
+ 3a8:	00098a93          	mv	s5,s3
+        buf[idx++] = digits[val % base];
+ 3ac:	000b0593          	mv	a1,s6
+ 3b0:	00040513          	mv	a0,s0
+ 3b4:	00000097          	auipc	ra,0x0
+ 3b8:	524080e7          	jalr	1316(ra) # 8d8 <__umodsi3>
+ 3bc:	00a90533          	add	a0,s2,a0
+ 3c0:	00054783          	lbu	a5,0(a0)
+        val /= base;
+ 3c4:	000b0593          	mv	a1,s6
+ 3c8:	00040513          	mv	a0,s0
+        buf[idx++] = digits[val % base];
+ 3cc:	00f98023          	sb	a5,0(s3)
+ 3d0:	00040a13          	mv	s4,s0
+        val /= base;
+ 3d4:	00000097          	auipc	ra,0x0
+ 3d8:	4bc080e7          	jalr	1212(ra) # 890 <__hidden___udivsi3>
+        buf[idx++] = digits[val % base];
+ 3dc:	00148493          	addi	s1,s1,1
+        val /= base;
+ 3e0:	00050413          	mv	s0,a0
+    while (val > 0) {
+ 3e4:	00198993          	addi	s3,s3,1
+ 3e8:	fd6a72e3          	bgeu	s4,s6,3ac <print_num+0x64>
+    }
+
+    while (idx > 0) {
+        uart_putc(buf[--idx]);
+ 3ec:	fff48493          	addi	s1,s1,-1
+ 3f0:	009a87b3          	add	a5,s5,s1
+ 3f4:	0007c503          	lbu	a0,0(a5)
+ 3f8:	00000097          	auipc	ra,0x0
+ 3fc:	2fc080e7          	jalr	764(ra) # 6f4 <uart_putc>
+    while (idx > 0) {
+ 400:	fe0496e3          	bnez	s1,3ec <print_num+0xa4>
+    }
+}
+ 404:	04c12083          	lw	ra,76(sp)
+ 408:	04812403          	lw	s0,72(sp)
+ 40c:	04412483          	lw	s1,68(sp)
+ 410:	04012903          	lw	s2,64(sp)
+ 414:	03c12983          	lw	s3,60(sp)
+ 418:	03812a03          	lw	s4,56(sp)
+ 41c:	03412a83          	lw	s5,52(sp)
+ 420:	03012b03          	lw	s6,48(sp)
+ 424:	05010113          	addi	sp,sp,80
+ 428:	00008067          	ret
+    if (val == 0) {
+ 42c:	f60414e3          	bnez	s0,394 <print_num+0x4c>
+}
+ 430:	04812403          	lw	s0,72(sp)
+ 434:	04c12083          	lw	ra,76(sp)
+ 438:	04412483          	lw	s1,68(sp)
+ 43c:	04012903          	lw	s2,64(sp)
+ 440:	03c12983          	lw	s3,60(sp)
+ 444:	03812a03          	lw	s4,56(sp)
+ 448:	03412a83          	lw	s5,52(sp)
+ 44c:	03012b03          	lw	s6,48(sp)
+        uart_putc('0');
+ 450:	03000513          	li	a0,48
+}
+ 454:	05010113          	addi	sp,sp,80
+        uart_putc('0');
+ 458:	00000317          	auipc	t1,0x0
+ 45c:	29c30067          	jr	668(t1) # 6f4 <uart_putc>
+    const char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+ 460:	00001937          	lui	s2,0x1
+ 464:	af490913          	addi	s2,s2,-1292 # af4 <__modsi3+0x1e8>
+ 468:	f39ff06f          	j	3a0 <print_num+0x58>
+
+0000046c <delay_ms>:
+    while (ms--) {
+ 46c:	00051463          	bnez	a0,474 <delay_ms+0x8>
+}
+ 470:	00008067          	ret
+    __asm__ volatile (
+ 474:	00003737          	lui	a4,0x3
+    while (ms--) {
+ 478:	fff50513          	addi	a0,a0,-1
+    __asm__ volatile (
+ 47c:	0d470713          	addi	a4,a4,212 # 30d4 <_sidata+0x25ac>
+ 480:	fff70713          	addi	a4,a4,-1
+ 484:	fe071ee3          	bnez	a4,480 <delay_ms+0x14>
+ 488:	fe5ff06f          	j	46c <delay_ms>
+
+0000048c <kprintf>:
+
+int kprintf(const char *fmt, ...)
+{
+ 48c:	fa010113          	addi	sp,sp,-96
+ 490:	02812c23          	sw	s0,56(sp)
+ 494:	02112e23          	sw	ra,60(sp)
+ 498:	02912a23          	sw	s1,52(sp)
+ 49c:	03212823          	sw	s2,48(sp)
+ 4a0:	03312623          	sw	s3,44(sp)
+ 4a4:	03412423          	sw	s4,40(sp)
+ 4a8:	03512223          	sw	s5,36(sp)
+ 4ac:	03612023          	sw	s6,32(sp)
+ 4b0:	01712e23          	sw	s7,28(sp)
+ 4b4:	01812c23          	sw	s8,24(sp)
+ 4b8:	01912a23          	sw	s9,20(sp)
+ 4bc:	04b12223          	sw	a1,68(sp)
+ 4c0:	04c12423          	sw	a2,72(sp)
+ 4c4:	04d12623          	sw	a3,76(sp)
+ 4c8:	04e12823          	sw	a4,80(sp)
+ 4cc:	04f12a23          	sw	a5,84(sp)
+ 4d0:	05012c23          	sw	a6,88(sp)
+ 4d4:	05112e23          	sw	a7,92(sp)
+    if (!fmt) return 0;
+ 4d8:	00000413          	li	s0,0
+ 4dc:	02050a63          	beqz	a0,510 <kprintf+0x84>
+    va_list args;
+    va_start(args, fmt);
+ 4e0:	04410793          	addi	a5,sp,68
+ 4e4:	00050913          	mv	s2,a0
+ 4e8:	00f12623          	sw	a5,12(sp)
+
+    int count = 0;
+ 4ec:	00000413          	li	s0,0
+    for (const char *p = fmt; *p != '\0'; p++) {
+        if (*p != '%') {
+ 4f0:	02500993          	li	s3,37
+            count++;
+            continue;
+        }
+
+        p++; // Skip '%'
+        switch (*p) {
+ 4f4:	06900a13          	li	s4,105
+ 4f8:	07500a93          	li	s5,117
+ 4fc:	07000c13          	li	s8,112
+ 500:	05800b13          	li	s6,88
+ 504:	06300c93          	li	s9,99
+    for (const char *p = fmt; *p != '\0'; p++) {
+ 508:	00094503          	lbu	a0,0(s2)
+ 50c:	02051e63          	bnez	a0,548 <kprintf+0xbc>
+        }
+    }
+
+    va_end(args);
+    return count;
+}
+ 510:	03c12083          	lw	ra,60(sp)
+ 514:	00040513          	mv	a0,s0
+ 518:	03812403          	lw	s0,56(sp)
+ 51c:	03412483          	lw	s1,52(sp)
+ 520:	03012903          	lw	s2,48(sp)
+ 524:	02c12983          	lw	s3,44(sp)
+ 528:	02812a03          	lw	s4,40(sp)
+ 52c:	02412a83          	lw	s5,36(sp)
+ 530:	02012b03          	lw	s6,32(sp)
+ 534:	01c12b83          	lw	s7,28(sp)
+ 538:	01812c03          	lw	s8,24(sp)
+ 53c:	01412c83          	lw	s9,20(sp)
+ 540:	06010113          	addi	sp,sp,96
+ 544:	00008067          	ret
+        p++; // Skip '%'
+ 548:	00190b93          	addi	s7,s2,1
+        if (*p != '%') {
+ 54c:	03350063          	beq	a0,s3,56c <kprintf+0xe0>
+            uart_putc(*p);
+ 550:	00000097          	auipc	ra,0x0
+ 554:	1a4080e7          	jalr	420(ra) # 6f4 <uart_putc>
+            count++;
+ 558:	00140493          	addi	s1,s0,1
+            continue;
+ 55c:	00090b93          	mv	s7,s2
+    for (const char *p = fmt; *p != '\0'; p++) {
+ 560:	001b8913          	addi	s2,s7,1
+ 564:	00048413          	mv	s0,s1
+ 568:	fa1ff06f          	j	508 <kprintf+0x7c>
+        switch (*p) {
+ 56c:	00194783          	lbu	a5,1(s2)
+ 570:	05478063          	beq	a5,s4,5b0 <kprintf+0x124>
+ 574:	06fa6463          	bltu	s4,a5,5dc <kprintf+0x150>
+ 578:	11678663          	beq	a5,s6,684 <kprintf+0x1f8>
+ 57c:	02fb6463          	bltu	s6,a5,5a4 <kprintf+0x118>
+                uart_putc('%');
+ 580:	00098513          	mv	a0,s3
+        switch (*p) {
+ 584:	0f378063          	beq	a5,s3,664 <kprintf+0x1d8>
+                uart_putc('%');
+ 588:	02500513          	li	a0,37
+ 58c:	00000097          	auipc	ra,0x0
+ 590:	168080e7          	jalr	360(ra) # 6f4 <uart_putc>
+                uart_putc(*p);
+ 594:	00194503          	lbu	a0,1(s2)
+ 598:	00000097          	auipc	ra,0x0
+ 59c:	15c080e7          	jalr	348(ra) # 6f4 <uart_putc>
+ 5a0:	1340006f          	j	6d4 <kprintf+0x248>
+        switch (*p) {
+ 5a4:	0b978863          	beq	a5,s9,654 <kprintf+0x1c8>
+ 5a8:	06400713          	li	a4,100
+ 5ac:	fce79ee3          	bne	a5,a4,588 <kprintf+0xfc>
+                int32_t d = va_arg(args, int32_t);
+ 5b0:	00c12783          	lw	a5,12(sp)
+                print_num((uint32_t)d, 10, false, true);
+ 5b4:	00100693          	li	a3,1
+                int32_t d = va_arg(args, int32_t);
+ 5b8:	00478713          	addi	a4,a5,4
+ 5bc:	00e12623          	sw	a4,12(sp)
+                print_num((uint32_t)d, 10, false, true);
+ 5c0:	00000613          	li	a2,0
+ 5c4:	00a00593          	li	a1,10
+ 5c8:	0007a503          	lw	a0,0(a5)
+ 5cc:	00000097          	auipc	ra,0x0
+ 5d0:	d7c080e7          	jalr	-644(ra) # 348 <print_num>
+                count++;
+ 5d4:	00140493          	addi	s1,s0,1
+                break;
+ 5d8:	f89ff06f          	j	560 <kprintf+0xd4>
+        switch (*p) {
+ 5dc:	09578a63          	beq	a5,s5,670 <kprintf+0x1e4>
+ 5e0:	04fae863          	bltu	s5,a5,630 <kprintf+0x1a4>
+ 5e4:	0b878c63          	beq	a5,s8,69c <kprintf+0x210>
+ 5e8:	07300713          	li	a4,115
+ 5ec:	f8e79ee3          	bne	a5,a4,588 <kprintf+0xfc>
+                const char *s = va_arg(args, const char *);
+ 5f0:	00c12783          	lw	a5,12(sp)
+ 5f4:	0007a903          	lw	s2,0(a5)
+ 5f8:	00478713          	addi	a4,a5,4
+ 5fc:	00e12623          	sw	a4,12(sp)
+                if (!s) s = "(null)";
+ 600:	00091663          	bnez	s2,60c <kprintf+0x180>
+ 604:	00001937          	lui	s2,0x1
+ 608:	b0890913          	addi	s2,s2,-1272 # b08 <__modsi3+0x1fc>
+ 60c:	00040493          	mv	s1,s0
+                while (*s) {
+ 610:	408487b3          	sub	a5,s1,s0
+ 614:	00f907b3          	add	a5,s2,a5
+ 618:	0007c503          	lbu	a0,0(a5)
+ 61c:	f40502e3          	beqz	a0,560 <kprintf+0xd4>
+                    uart_putc(*s++);
+ 620:	00000097          	auipc	ra,0x0
+ 624:	0d4080e7          	jalr	212(ra) # 6f4 <uart_putc>
+                    count++;
+ 628:	00148493          	addi	s1,s1,1
+ 62c:	fe5ff06f          	j	610 <kprintf+0x184>
+        switch (*p) {
+ 630:	07800713          	li	a4,120
+ 634:	f4e79ae3          	bne	a5,a4,588 <kprintf+0xfc>
+                uint32_t x = va_arg(args, uint32_t);
+ 638:	00c12783          	lw	a5,12(sp)
+                print_num(x, 16, false, false);
+ 63c:	00000693          	li	a3,0
+ 640:	00000613          	li	a2,0
+                uint32_t x = va_arg(args, uint32_t);
+ 644:	00478713          	addi	a4,a5,4
+ 648:	00e12623          	sw	a4,12(sp)
+                print_num(x, 16, true, false);
+ 64c:	01000593          	li	a1,16
+ 650:	f79ff06f          	j	5c8 <kprintf+0x13c>
+                char c = (char)va_arg(args, int);
+ 654:	00c12783          	lw	a5,12(sp)
+                uart_putc(c);
+ 658:	0007c503          	lbu	a0,0(a5)
+                char c = (char)va_arg(args, int);
+ 65c:	00478713          	addi	a4,a5,4
+ 660:	00e12623          	sw	a4,12(sp)
+                uart_putc('%');
+ 664:	00000097          	auipc	ra,0x0
+ 668:	090080e7          	jalr	144(ra) # 6f4 <uart_putc>
+                count++;
+ 66c:	f69ff06f          	j	5d4 <kprintf+0x148>
+                uint32_t u = va_arg(args, uint32_t);
+ 670:	00c12783          	lw	a5,12(sp)
+                print_num(u, 10, false, false);
+ 674:	00000693          	li	a3,0
+                uint32_t u = va_arg(args, uint32_t);
+ 678:	00478713          	addi	a4,a5,4
+ 67c:	00e12623          	sw	a4,12(sp)
+                print_num(u, 10, false, false);
+ 680:	f41ff06f          	j	5c0 <kprintf+0x134>
+                uint32_t x = va_arg(args, uint32_t);
+ 684:	00c12783          	lw	a5,12(sp)
+                print_num(x, 16, true, false);
+ 688:	00000693          	li	a3,0
+ 68c:	00100613          	li	a2,1
+                uint32_t x = va_arg(args, uint32_t);
+ 690:	00478713          	addi	a4,a5,4
+ 694:	00e12623          	sw	a4,12(sp)
+                print_num(x, 16, true, false);
+ 698:	fb5ff06f          	j	64c <kprintf+0x1c0>
+                uint32_t ptr = va_arg(args, uint32_t);
+ 69c:	00c12783          	lw	a5,12(sp)
+                uart_puts("0x");
+ 6a0:	00001537          	lui	a0,0x1
+ 6a4:	b1050513          	addi	a0,a0,-1264 # b10 <__modsi3+0x204>
+                uint32_t ptr = va_arg(args, uint32_t);
+ 6a8:	0007a483          	lw	s1,0(a5)
+ 6ac:	00478713          	addi	a4,a5,4
+ 6b0:	00e12623          	sw	a4,12(sp)
+                uart_puts("0x");
+ 6b4:	00000097          	auipc	ra,0x0
+ 6b8:	0ac080e7          	jalr	172(ra) # 760 <uart_puts>
+                print_num(ptr, 16, false, false);
+ 6bc:	00000693          	li	a3,0
+ 6c0:	00000613          	li	a2,0
+ 6c4:	01000593          	li	a1,16
+ 6c8:	00048513          	mv	a0,s1
+ 6cc:	00000097          	auipc	ra,0x0
+ 6d0:	c7c080e7          	jalr	-900(ra) # 348 <print_num>
+                count += 2;
+ 6d4:	00240493          	addi	s1,s0,2
+                break;
+ 6d8:	e89ff06f          	j	560 <kprintf+0xd4>
+
+000006dc <uart_init>:
+#include "uart.h"
+
+void uart_init(uint8_t baud_code)
+{
+    UART_REG_BAUD = (uint32_t)(baud_code & 0x07);
+ 6dc:	200007b7          	lui	a5,0x20000
+ 6e0:	00757513          	andi	a0,a0,7
+ 6e4:	00a7a423          	sw	a0,8(a5) # 20000008 <_stack_top+0xfffe008>
+    UART_REG_STATUS_CLEAR = 0x01; // Clear any pending status
+ 6e8:	00100713          	li	a4,1
+ 6ec:	00e7a623          	sw	a4,12(a5)
+}
+ 6f0:	00008067          	ret
+
+000006f4 <uart_putc>:
+
+void uart_putc(char c)
+{
+    // Auto-convert LF to CRLF for standard serial terminals
+    if (c == '\n') {
+ 6f4:	00a00793          	li	a5,10
+ 6f8:	02f51263          	bne	a0,a5,71c <uart_putc+0x28>
+        while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
+ 6fc:	20000737          	lui	a4,0x20000
+ 700:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
+ 704:	00072783          	lw	a5,0(a4)
+ 708:	0017f793          	andi	a5,a5,1
+ 70c:	fe079ce3          	bnez	a5,704 <uart_putc+0x10>
+            ;
+        UART_REG_DATA = (uint32_t)'\r';
+ 710:	200007b7          	lui	a5,0x20000
+ 714:	00d00713          	li	a4,13
+ 718:	00e7a023          	sw	a4,0(a5) # 20000000 <_stack_top+0xfffe000>
+    }
+
+    while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
+ 71c:	20000737          	lui	a4,0x20000
+ 720:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
+ 724:	00072783          	lw	a5,0(a4)
+ 728:	0017f793          	andi	a5,a5,1
+ 72c:	fe079ce3          	bnez	a5,724 <uart_putc+0x30>
+        ;
+    UART_REG_DATA = (uint32_t)(uint8_t)c;
+ 730:	200007b7          	lui	a5,0x20000
+ 734:	00a7a023          	sw	a0,0(a5) # 20000000 <_stack_top+0xfffe000>
+}
+ 738:	00008067          	ret
+
+0000073c <uart_getc>:
+
+char uart_getc(void)
+{
+    while (!(UART_REG_STATUS & UART_STATUS_RX_VALID))
+ 73c:	20000737          	lui	a4,0x20000
+ 740:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
+ 744:	00072783          	lw	a5,0(a4)
+ 748:	0027f793          	andi	a5,a5,2
+ 74c:	fe078ce3          	beqz	a5,744 <uart_getc+0x8>
+        ;
+    return (char)(UART_REG_DATA & 0xFF);
+ 750:	200007b7          	lui	a5,0x20000
+ 754:	0007a503          	lw	a0,0(a5) # 20000000 <_stack_top+0xfffe000>
+}
+ 758:	0ff57513          	zext.b	a0,a0
+ 75c:	00008067          	ret
+
+00000760 <uart_puts>:
+    return (UART_REG_STATUS & UART_STATUS_RX_VALID) != 0;
+}
+
+void uart_puts(const char *str)
+{
+    if (!str) return;
+ 760:	02051663          	bnez	a0,78c <uart_puts+0x2c>
+ 764:	00008067          	ret
+    while (*str) {
+        uart_putc(*str++);
+ 768:	00140413          	addi	s0,s0,1
+ 76c:	00000097          	auipc	ra,0x0
+ 770:	f88080e7          	jalr	-120(ra) # 6f4 <uart_putc>
+    while (*str) {
+ 774:	00044503          	lbu	a0,0(s0)
+ 778:	fe0518e3          	bnez	a0,768 <uart_puts+0x8>
+    }
+}
+ 77c:	00c12083          	lw	ra,12(sp)
+ 780:	00812403          	lw	s0,8(sp)
+ 784:	01010113          	addi	sp,sp,16
+ 788:	00008067          	ret
+{
+ 78c:	ff010113          	addi	sp,sp,-16
+ 790:	00812423          	sw	s0,8(sp)
+ 794:	00112623          	sw	ra,12(sp)
+ 798:	00050413          	mv	s0,a0
+ 79c:	fd9ff06f          	j	774 <uart_puts+0x14>
+
+000007a0 <gpio_set_leds>:
+#include "gpio.h"
+
+void gpio_set_leds(uint16_t mask)
+{
+    GPIO_REG_DATA_OUT = (uint32_t)mask;
+ 7a0:	300007b7          	lui	a5,0x30000
+ 7a4:	00a7a023          	sw	a0,0(a5) # 30000000 <_stack_top+0x1fffe000>
+}
+ 7a8:	00008067          	ret
+
+000007ac <gpio_get_inputs>:
+    GPIO_REG_DATA_OUT ^= (1UL << pin);
+}
+
+uint16_t gpio_get_inputs(void)
+{
+    return (uint16_t)(GPIO_REG_DATA_IN & 0xFFFF);
+ 7ac:	300007b7          	lui	a5,0x30000
+ 7b0:	0047a503          	lw	a0,4(a5) # 30000004 <_stack_top+0x1fffe004>
+}
+ 7b4:	01051513          	slli	a0,a0,0x10
+ 7b8:	01055513          	srli	a0,a0,0x10
+ 7bc:	00008067          	ret
+
+000007c0 <i2c_wait_completion>:
+
+static bool i2c_wait_completion(void)
+{
+    // Wait until controller is done or reports an error
+    while (1) {
+        uint32_t status = I2C_REG_CTRL_STATUS;
+ 7c0:	40000737          	lui	a4,0x40000
+ 7c4:	00072783          	lw	a5,0(a4) # 40000000 <_stack_top+0x2fffe000>
+        if (status & I2C_STATUS_ERR) {
+ 7c8:	0047f693          	andi	a3,a5,4
+ 7cc:	00069a63          	bnez	a3,7e0 <i2c_wait_completion+0x20>
+            return false;
+        }
+        if (status & I2C_STATUS_DONE) {
+ 7d0:	0017f793          	andi	a5,a5,1
+ 7d4:	fe0788e3          	beqz	a5,7c4 <i2c_wait_completion+0x4>
+            return true;
+ 7d8:	00100513          	li	a0,1
+ 7dc:	00008067          	ret
+            return false;
+ 7e0:	00000513          	li	a0,0
+        }
+    }
+}
+ 7e4:	00008067          	ret
+
+000007e8 <i2c_init>:
+    I2C_REG_CONFIG = (uint32_t)(speed_mode & 0x01);
+ 7e8:	00157513          	andi	a0,a0,1
+ 7ec:	400007b7          	lui	a5,0x40000
+ 7f0:	00a7aa23          	sw	a0,20(a5) # 40000014 <_stack_top+0x2fffe014>
+}
+ 7f4:	00008067          	ret
+
+000007f8 <i2c_read_reg>:
+    return i2c_wait_completion();
+}
+
+bool i2c_read_reg(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data_out)
+{
+    if (!data_out) return false;
+ 7f8:	00061e63          	bnez	a2,814 <i2c_read_reg+0x1c>
+ 7fc:	00000513          	li	a0,0
+        return false;
+    }
+
+    *data_out = (uint8_t)(I2C_REG_RD_DATA0 & 0xFF);
+    return true;
+}
+ 800:	00008067          	ret
+    if (!data_out) return false;
+ 804:	00000513          	li	a0,0
+}
+ 808:	01c12083          	lw	ra,28(sp)
+ 80c:	02010113          	addi	sp,sp,32
+ 810:	00008067          	ret
+{
+ 814:	fe010113          	addi	sp,sp,-32
+    I2C_REG_SLV_ADDR = (uint32_t)((dev_addr << 1) | I2C_DIR_READ);
+ 818:	00151513          	slli	a0,a0,0x1
+{
+ 81c:	00112e23          	sw	ra,28(sp)
+ 820:	00c12623          	sw	a2,12(sp)
+    I2C_REG_SLV_ADDR = (uint32_t)((dev_addr << 1) | I2C_DIR_READ);
+ 824:	400007b7          	lui	a5,0x40000
+ 828:	00156513          	ori	a0,a0,1
+ 82c:	00a7a223          	sw	a0,4(a5) # 40000004 <_stack_top+0x2fffe004>
+    I2C_REG_REG_ADDR = (uint32_t)reg_addr;
+ 830:	00b7a423          	sw	a1,8(a5)
+    I2C_REG_BYTE_CNT = 1; // 1 byte
+ 834:	00078713          	mv	a4,a5
+ 838:	00100793          	li	a5,1
+ 83c:	00f72823          	sw	a5,16(a4)
+    I2C_REG_CTRL_STATUS = I2C_CTRL_START;
+ 840:	00f72023          	sw	a5,0(a4)
+    if (!i2c_wait_completion()) {
+ 844:	00000097          	auipc	ra,0x0
+ 848:	f7c080e7          	jalr	-132(ra) # 7c0 <i2c_wait_completion>
+ 84c:	fa050ce3          	beqz	a0,804 <i2c_read_reg+0xc>
+    *data_out = (uint8_t)(I2C_REG_RD_DATA0 & 0xFF);
+ 850:	400007b7          	lui	a5,0x40000
+ 854:	0207a783          	lw	a5,32(a5) # 40000020 <_stack_top+0x2fffe020>
+ 858:	00c12603          	lw	a2,12(sp)
+ 85c:	00f60023          	sb	a5,0(a2) # a5a50000 <_stack_top+0x95a4e000>
+    return true;
+ 860:	fa9ff06f          	j	808 <i2c_read_reg+0x10>
+
+00000864 <i2c_ping>:
+
+    return true;
+}
+
+bool i2c_ping(uint8_t dev_addr)
+{
+ 864:	fe010113          	addi	sp,sp,-32
+    uint8_t dummy;
+    // Attempt a single-byte read at register 0x00 to test ACK
+    return i2c_read_reg(dev_addr, 0x00, &dummy);
+ 868:	00f10613          	addi	a2,sp,15
+ 86c:	00000593          	li	a1,0
+{
+ 870:	00112e23          	sw	ra,28(sp)
+    return i2c_read_reg(dev_addr, 0x00, &dummy);
+ 874:	00000097          	auipc	ra,0x0
+ 878:	f84080e7          	jalr	-124(ra) # 7f8 <i2c_read_reg>
+}
+ 87c:	01c12083          	lw	ra,28(sp)
+ 880:	02010113          	addi	sp,sp,32
+ 884:	00008067          	ret
+
+00000888 <__divsi3>:
+ 888:	06054063          	bltz	a0,8e8 <__umodsi3+0x10>
+ 88c:	0605c663          	bltz	a1,8f8 <__umodsi3+0x20>
+
+00000890 <__hidden___udivsi3>:
+ 890:	00058613          	mv	a2,a1
+ 894:	00050593          	mv	a1,a0
+ 898:	fff00513          	li	a0,-1
+ 89c:	02060c63          	beqz	a2,8d4 <__hidden___udivsi3+0x44>
+ 8a0:	00100693          	li	a3,1
+ 8a4:	00b67a63          	bgeu	a2,a1,8b8 <__hidden___udivsi3+0x28>
+ 8a8:	00c05863          	blez	a2,8b8 <__hidden___udivsi3+0x28>
+ 8ac:	00161613          	slli	a2,a2,0x1
+ 8b0:	00169693          	slli	a3,a3,0x1
+ 8b4:	feb66ae3          	bltu	a2,a1,8a8 <__hidden___udivsi3+0x18>
+ 8b8:	00000513          	li	a0,0
+ 8bc:	00c5e663          	bltu	a1,a2,8c8 <__hidden___udivsi3+0x38>
+ 8c0:	40c585b3          	sub	a1,a1,a2
+ 8c4:	00d56533          	or	a0,a0,a3
+ 8c8:	0016d693          	srli	a3,a3,0x1
+ 8cc:	00165613          	srli	a2,a2,0x1
+ 8d0:	fe0696e3          	bnez	a3,8bc <__hidden___udivsi3+0x2c>
+ 8d4:	00008067          	ret
+
+000008d8 <__umodsi3>:
+ 8d8:	00008293          	mv	t0,ra
+ 8dc:	fb5ff0ef          	jal	890 <__hidden___udivsi3>
+ 8e0:	00058513          	mv	a0,a1
+ 8e4:	00028067          	jr	t0
+ 8e8:	40a00533          	neg	a0,a0
+ 8ec:	00b04863          	bgtz	a1,8fc <__umodsi3+0x24>
+ 8f0:	40b005b3          	neg	a1,a1
+ 8f4:	f9dff06f          	j	890 <__hidden___udivsi3>
+ 8f8:	40b005b3          	neg	a1,a1
+ 8fc:	00008293          	mv	t0,ra
+ 900:	f91ff0ef          	jal	890 <__hidden___udivsi3>
+ 904:	40a00533          	neg	a0,a0
+ 908:	00028067          	jr	t0
+
+0000090c <__modsi3>:
+ 90c:	00008293          	mv	t0,ra
+ 910:	0005ca63          	bltz	a1,924 <__modsi3+0x18>
+ 914:	00054c63          	bltz	a0,92c <__modsi3+0x20>
+ 918:	f79ff0ef          	jal	890 <__hidden___udivsi3>
+ 91c:	00058513          	mv	a0,a1
+ 920:	00028067          	jr	t0
+ 924:	40b005b3          	neg	a1,a1
+ 928:	fe0558e3          	bgez	a0,918 <__modsi3+0xc>
+ 92c:	40a00533          	neg	a0,a0
+ 930:	f61ff0ef          	jal	890 <__hidden___udivsi3>
+ 934:	40b00533          	neg	a0,a1
+ 938:	00028067          	jr	t0

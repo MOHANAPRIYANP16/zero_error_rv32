@@ -1,0 +1,710 @@
+
+boot_app.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000200 <_start>:
+    .global _start
+    .type _start, @function
+
+_start:
+    /* Disable interrupts / setup stack pointer at top of Data RAM */
+    la   sp, _stack_top
+ 200:	10002117          	auipc	sp,0x10002
+ 204:	e0010113          	addi	sp,sp,-512 # 10002000 <_stack_top>
+
+    /* Zero out the .bss section */
+    la   a0, _sbss
+ 208:	10000517          	auipc	a0,0x10000
+ 20c:	df850513          	addi	a0,a0,-520 # 10000000 <_ebss>
+    la   a1, _ebss
+ 210:	10000597          	auipc	a1,0x10000
+ 214:	df058593          	addi	a1,a1,-528 # 10000000 <_ebss>
+    bge  a0, a1, 2f
+ 218:	00b55863          	bge	a0,a1,228 <_start+0x28>
+1:
+    sw   zero, 0(a0)
+ 21c:	00052023          	sw	zero,0(a0)
+    addi a0, a0, 4
+ 220:	00450513          	addi	a0,a0,4
+    blt  a0, a1, 1b
+ 224:	feb54ce3          	blt	a0,a1,21c <_start+0x1c>
+2:
+
+    /* Copy initialized .data section from Code ROM (LMA) to Data RAM (VMA) */
+    la   a0, _sdata
+ 228:	10000517          	auipc	a0,0x10000
+ 22c:	dd850513          	addi	a0,a0,-552 # 10000000 <_ebss>
+    la   a1, _edata
+ 230:	10000597          	auipc	a1,0x10000
+ 234:	dd058593          	addi	a1,a1,-560 # 10000000 <_ebss>
+    la   a2, _sidata
+ 238:	00000617          	auipc	a2,0x0
+ 23c:	7dc60613          	addi	a2,a2,2012 # a14 <_sidata>
+    bge  a0, a1, 4f
+ 240:	00b55c63          	bge	a0,a1,258 <_start+0x58>
+3:
+    lw   t0, 0(a2)
+ 244:	00062283          	lw	t0,0(a2)
+    sw   t0, 0(a0)
+ 248:	00552023          	sw	t0,0(a0)
+    addi a0, a0, 4
+ 24c:	00450513          	addi	a0,a0,4
+    addi a2, a2, 4
+ 250:	00460613          	addi	a2,a2,4
+    blt  a0, a1, 3b
+ 254:	feb548e3          	blt	a0,a1,244 <_start+0x44>
+4:
+
+    /* Call application entry point */
+    call main
+ 258:	00000097          	auipc	ra,0x0
+ 25c:	00c080e7          	jalr	12(ra) # 264 <main>
+
+00000260 <hang>:
+
+    /* Trap loop if main() exits */
+hang:
+    j    hang
+ 260:	0000006f          	j	260 <hang>
+
+00000264 <main>:
+#include "../common/kprintf.h"
+#include "../drivers/uart.h"
+#include "../drivers/gpio.h"
+
+int main(void)
+{
+ 264:	ff010113          	addi	sp,sp,-16
+    // Initialize UART at 115200 baud
+    uart_init(UART_BAUD_115200);
+ 268:	00400513          	li	a0,4
+{
+ 26c:	00112623          	sw	ra,12(sp)
+ 270:	00812423          	sw	s0,8(sp)
+ 274:	00912223          	sw	s1,4(sp)
+    uart_init(UART_BAUD_115200);
+ 278:	00000097          	auipc	ra,0x0
+ 27c:	49c080e7          	jalr	1180(ra) # 714 <uart_init>
+
+    // Initial LED indication: all 16 LEDs ON momentarily
+    gpio_set_leds(0xFFFF);
+ 280:	00010537          	lui	a0,0x10
+ 284:	fff50513          	addi	a0,a0,-1 # ffff <_sidata+0xf5eb>
+ 288:	00000097          	auipc	ra,0x0
+ 28c:	564080e7          	jalr	1380(ra) # 7ec <gpio_set_leds>
+    delay_ms(300);
+ 290:	12c00513          	li	a0,300
+ 294:	00000097          	auipc	ra,0x0
+ 298:	210080e7          	jalr	528(ra) # 4a4 <delay_ms>
+    gpio_set_leds(0x0000);
+ 29c:	00000513          	li	a0,0
+ 2a0:	00000097          	auipc	ra,0x0
+ 2a4:	54c080e7          	jalr	1356(ra) # 7ec <gpio_set_leds>
+
+    kprintf("\n\n");
+ 2a8:	00001537          	lui	a0,0x1
+ 2ac:	8ac50513          	addi	a0,a0,-1876 # 8ac <__modsi3+0x30>
+ 2b0:	00000097          	auipc	ra,0x0
+ 2b4:	214080e7          	jalr	532(ra) # 4c4 <kprintf>
+    kprintf("****************************************************\n");
+ 2b8:	00001437          	lui	s0,0x1
+ 2bc:	8b040513          	addi	a0,s0,-1872 # 8b0 <__modsi3+0x34>
+ 2c0:	00000097          	auipc	ra,0x0
+ 2c4:	204080e7          	jalr	516(ra) # 4c4 <kprintf>
+    kprintf("   SUCCESS: Application Launched by Bootloader!    \n");
+ 2c8:	00001537          	lui	a0,0x1
+ 2cc:	8e850513          	addi	a0,a0,-1816 # 8e8 <__modsi3+0x6c>
+ 2d0:	00000097          	auipc	ra,0x0
+ 2d4:	1f4080e7          	jalr	500(ra) # 4c4 <kprintf>
+    kprintf("   Running from Instruction Memory @ 0x0000_0200   \n");
+ 2d8:	00001537          	lui	a0,0x1
+ 2dc:	92050513          	addi	a0,a0,-1760 # 920 <__modsi3+0xa4>
+ 2e0:	00000097          	auipc	ra,0x0
+ 2e4:	1e4080e7          	jalr	484(ra) # 4c4 <kprintf>
+    kprintf("   Core Frequency: 25.0 MHz (RV32I Single-Cycle)   \n");
+ 2e8:	00001537          	lui	a0,0x1
+ 2ec:	95850513          	addi	a0,a0,-1704 # 958 <__modsi3+0xdc>
+ 2f0:	00000097          	auipc	ra,0x0
+ 2f4:	1d4080e7          	jalr	468(ra) # 4c4 <kprintf>
+    kprintf("****************************************************\n");
+ 2f8:	8b040513          	addi	a0,s0,-1872
+ 2fc:	00000097          	auipc	ra,0x0
+ 300:	1c8080e7          	jalr	456(ra) # 4c4 <kprintf>
+    kprintf("Echo mode active. Type characters into serial terminal:\n");
+ 304:	00001537          	lui	a0,0x1
+ 308:	99050513          	addi	a0,a0,-1648 # 990 <__modsi3+0x114>
+ 30c:	00000097          	auipc	ra,0x0
+ 310:	1b8080e7          	jalr	440(ra) # 4c4 <kprintf>
+        if (chaser == 0) chaser = 0x0001;
+
+        // If user sends character, echo back
+        if (uart_has_rx()) {
+            char c = uart_getc();
+            kprintf("[FPGA Echo]: %c\n", c);
+ 314:	000017b7          	lui	a5,0x1
+    uint16_t chaser = 0x0001;
+ 318:	00100413          	li	s0,1
+            kprintf("[FPGA Echo]: %c\n", c);
+ 31c:	9cc78493          	addi	s1,a5,-1588 # 9cc <__modsi3+0x150>
+        gpio_set_leds(chaser);
+ 320:	00040513          	mv	a0,s0
+ 324:	00000097          	auipc	ra,0x0
+ 328:	4c8080e7          	jalr	1224(ra) # 7ec <gpio_set_leds>
+        if (uart_has_rx()) {
+ 32c:	00000097          	auipc	ra,0x0
+ 330:	46c080e7          	jalr	1132(ra) # 798 <uart_has_rx>
+ 334:	00050e63          	beqz	a0,350 <main+0xec>
+            char c = uart_getc();
+ 338:	00000097          	auipc	ra,0x0
+ 33c:	43c080e7          	jalr	1084(ra) # 774 <uart_getc>
+ 340:	00050593          	mv	a1,a0
+            kprintf("[FPGA Echo]: %c\n", c);
+ 344:	00048513          	mv	a0,s1
+ 348:	00000097          	auipc	ra,0x0
+ 34c:	17c080e7          	jalr	380(ra) # 4c4 <kprintf>
+        chaser <<= 1;
+ 350:	00141793          	slli	a5,s0,0x1
+        if (chaser == 0) chaser = 0x0001;
+ 354:	01079713          	slli	a4,a5,0x10
+ 358:	01175713          	srli	a4,a4,0x11
+ 35c:	00078413          	mv	s0,a5
+ 360:	00071463          	bnez	a4,368 <main+0x104>
+ 364:	00100413          	li	s0,1
+ 368:	01041413          	slli	s0,s0,0x10
+        }
+
+        delay_ms(80);
+ 36c:	05000513          	li	a0,80
+        if (chaser == 0) chaser = 0x0001;
+ 370:	01045413          	srli	s0,s0,0x10
+        delay_ms(80);
+ 374:	00000097          	auipc	ra,0x0
+ 378:	130080e7          	jalr	304(ra) # 4a4 <delay_ms>
+        gpio_set_leds(chaser);
+ 37c:	fa5ff06f          	j	320 <main+0xbc>
+
+00000380 <print_num>:
+    }
+    return len;
+}
+
+static void print_num(uint32_t val, uint32_t base, bool uppercase, bool is_signed)
+{
+ 380:	fb010113          	addi	sp,sp,-80
+ 384:	04812423          	sw	s0,72(sp)
+ 388:	03612823          	sw	s6,48(sp)
+ 38c:	04112623          	sw	ra,76(sp)
+ 390:	04912223          	sw	s1,68(sp)
+ 394:	05212023          	sw	s2,64(sp)
+ 398:	03312e23          	sw	s3,60(sp)
+ 39c:	03412c23          	sw	s4,56(sp)
+ 3a0:	03512a23          	sw	s5,52(sp)
+ 3a4:	00050413          	mv	s0,a0
+ 3a8:	00058b13          	mv	s6,a1
+    char buf[32];
+    int idx = 0;
+
+    if (is_signed && ((int32_t)val < 0)) {
+ 3ac:	0a055c63          	bgez	a0,464 <print_num+0xe4>
+ 3b0:	0a068a63          	beqz	a3,464 <print_num+0xe4>
+        uart_putc('-');
+ 3b4:	02d00513          	li	a0,45
+ 3b8:	00c12623          	sw	a2,12(sp)
+ 3bc:	00000097          	auipc	ra,0x0
+ 3c0:	370080e7          	jalr	880(ra) # 72c <uart_putc>
+        val = (uint32_t)(-(int32_t)val);
+ 3c4:	00c12603          	lw	a2,12(sp)
+ 3c8:	40800433          	neg	s0,s0
+    if (val == 0) {
+        uart_putc('0');
+        return;
+    }
+
+    const char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+ 3cc:	0c061663          	bnez	a2,498 <print_num+0x118>
+ 3d0:	00001937          	lui	s2,0x1
+ 3d4:	9e090913          	addi	s2,s2,-1568 # 9e0 <__modsi3+0x164>
+
+    while (val > 0) {
+ 3d8:	01010993          	addi	s3,sp,16
+{
+ 3dc:	00000493          	li	s1,0
+ 3e0:	00098a93          	mv	s5,s3
+        buf[idx++] = digits[val % base];
+ 3e4:	000b0593          	mv	a1,s6
+ 3e8:	00040513          	mv	a0,s0
+ 3ec:	00000097          	auipc	ra,0x0
+ 3f0:	45c080e7          	jalr	1116(ra) # 848 <__umodsi3>
+ 3f4:	00a90533          	add	a0,s2,a0
+ 3f8:	00054783          	lbu	a5,0(a0)
+        val /= base;
+ 3fc:	000b0593          	mv	a1,s6
+ 400:	00040513          	mv	a0,s0
+        buf[idx++] = digits[val % base];
+ 404:	00f98023          	sb	a5,0(s3)
+ 408:	00040a13          	mv	s4,s0
+        val /= base;
+ 40c:	00000097          	auipc	ra,0x0
+ 410:	3f4080e7          	jalr	1012(ra) # 800 <__hidden___udivsi3>
+        buf[idx++] = digits[val % base];
+ 414:	00148493          	addi	s1,s1,1
+        val /= base;
+ 418:	00050413          	mv	s0,a0
+    while (val > 0) {
+ 41c:	00198993          	addi	s3,s3,1
+ 420:	fd6a72e3          	bgeu	s4,s6,3e4 <print_num+0x64>
+    }
+
+    while (idx > 0) {
+        uart_putc(buf[--idx]);
+ 424:	fff48493          	addi	s1,s1,-1
+ 428:	009a87b3          	add	a5,s5,s1
+ 42c:	0007c503          	lbu	a0,0(a5)
+ 430:	00000097          	auipc	ra,0x0
+ 434:	2fc080e7          	jalr	764(ra) # 72c <uart_putc>
+    while (idx > 0) {
+ 438:	fe0496e3          	bnez	s1,424 <print_num+0xa4>
+    }
+}
+ 43c:	04c12083          	lw	ra,76(sp)
+ 440:	04812403          	lw	s0,72(sp)
+ 444:	04412483          	lw	s1,68(sp)
+ 448:	04012903          	lw	s2,64(sp)
+ 44c:	03c12983          	lw	s3,60(sp)
+ 450:	03812a03          	lw	s4,56(sp)
+ 454:	03412a83          	lw	s5,52(sp)
+ 458:	03012b03          	lw	s6,48(sp)
+ 45c:	05010113          	addi	sp,sp,80
+ 460:	00008067          	ret
+    if (val == 0) {
+ 464:	f60414e3          	bnez	s0,3cc <print_num+0x4c>
+}
+ 468:	04812403          	lw	s0,72(sp)
+ 46c:	04c12083          	lw	ra,76(sp)
+ 470:	04412483          	lw	s1,68(sp)
+ 474:	04012903          	lw	s2,64(sp)
+ 478:	03c12983          	lw	s3,60(sp)
+ 47c:	03812a03          	lw	s4,56(sp)
+ 480:	03412a83          	lw	s5,52(sp)
+ 484:	03012b03          	lw	s6,48(sp)
+        uart_putc('0');
+ 488:	03000513          	li	a0,48
+}
+ 48c:	05010113          	addi	sp,sp,80
+        uart_putc('0');
+ 490:	00000317          	auipc	t1,0x0
+ 494:	29c30067          	jr	668(t1) # 72c <uart_putc>
+    const char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+ 498:	00001937          	lui	s2,0x1
+ 49c:	9f490913          	addi	s2,s2,-1548 # 9f4 <__modsi3+0x178>
+ 4a0:	f39ff06f          	j	3d8 <print_num+0x58>
+
+000004a4 <delay_ms>:
+    while (ms--) {
+ 4a4:	00051463          	bnez	a0,4ac <delay_ms+0x8>
+}
+ 4a8:	00008067          	ret
+    __asm__ volatile (
+ 4ac:	00003737          	lui	a4,0x3
+    while (ms--) {
+ 4b0:	fff50513          	addi	a0,a0,-1
+    __asm__ volatile (
+ 4b4:	0d470713          	addi	a4,a4,212 # 30d4 <_sidata+0x26c0>
+ 4b8:	fff70713          	addi	a4,a4,-1
+ 4bc:	fe071ee3          	bnez	a4,4b8 <delay_ms+0x14>
+ 4c0:	fe5ff06f          	j	4a4 <delay_ms>
+
+000004c4 <kprintf>:
+
+int kprintf(const char *fmt, ...)
+{
+ 4c4:	fa010113          	addi	sp,sp,-96
+ 4c8:	02812c23          	sw	s0,56(sp)
+ 4cc:	02112e23          	sw	ra,60(sp)
+ 4d0:	02912a23          	sw	s1,52(sp)
+ 4d4:	03212823          	sw	s2,48(sp)
+ 4d8:	03312623          	sw	s3,44(sp)
+ 4dc:	03412423          	sw	s4,40(sp)
+ 4e0:	03512223          	sw	s5,36(sp)
+ 4e4:	03612023          	sw	s6,32(sp)
+ 4e8:	01712e23          	sw	s7,28(sp)
+ 4ec:	01812c23          	sw	s8,24(sp)
+ 4f0:	01912a23          	sw	s9,20(sp)
+ 4f4:	04b12223          	sw	a1,68(sp)
+ 4f8:	04c12423          	sw	a2,72(sp)
+ 4fc:	04d12623          	sw	a3,76(sp)
+ 500:	04e12823          	sw	a4,80(sp)
+ 504:	04f12a23          	sw	a5,84(sp)
+ 508:	05012c23          	sw	a6,88(sp)
+ 50c:	05112e23          	sw	a7,92(sp)
+    if (!fmt) return 0;
+ 510:	00000413          	li	s0,0
+ 514:	02050a63          	beqz	a0,548 <kprintf+0x84>
+    va_list args;
+    va_start(args, fmt);
+ 518:	04410793          	addi	a5,sp,68
+ 51c:	00050913          	mv	s2,a0
+ 520:	00f12623          	sw	a5,12(sp)
+
+    int count = 0;
+ 524:	00000413          	li	s0,0
+    for (const char *p = fmt; *p != '\0'; p++) {
+        if (*p != '%') {
+ 528:	02500993          	li	s3,37
+            count++;
+            continue;
+        }
+
+        p++; // Skip '%'
+        switch (*p) {
+ 52c:	06900a13          	li	s4,105
+ 530:	07500a93          	li	s5,117
+ 534:	07000c13          	li	s8,112
+ 538:	05800b13          	li	s6,88
+ 53c:	06300c93          	li	s9,99
+    for (const char *p = fmt; *p != '\0'; p++) {
+ 540:	00094503          	lbu	a0,0(s2)
+ 544:	02051e63          	bnez	a0,580 <kprintf+0xbc>
+        }
+    }
+
+    va_end(args);
+    return count;
+}
+ 548:	03c12083          	lw	ra,60(sp)
+ 54c:	00040513          	mv	a0,s0
+ 550:	03812403          	lw	s0,56(sp)
+ 554:	03412483          	lw	s1,52(sp)
+ 558:	03012903          	lw	s2,48(sp)
+ 55c:	02c12983          	lw	s3,44(sp)
+ 560:	02812a03          	lw	s4,40(sp)
+ 564:	02412a83          	lw	s5,36(sp)
+ 568:	02012b03          	lw	s6,32(sp)
+ 56c:	01c12b83          	lw	s7,28(sp)
+ 570:	01812c03          	lw	s8,24(sp)
+ 574:	01412c83          	lw	s9,20(sp)
+ 578:	06010113          	addi	sp,sp,96
+ 57c:	00008067          	ret
+        p++; // Skip '%'
+ 580:	00190b93          	addi	s7,s2,1
+        if (*p != '%') {
+ 584:	03350063          	beq	a0,s3,5a4 <kprintf+0xe0>
+            uart_putc(*p);
+ 588:	00000097          	auipc	ra,0x0
+ 58c:	1a4080e7          	jalr	420(ra) # 72c <uart_putc>
+            count++;
+ 590:	00140493          	addi	s1,s0,1
+            continue;
+ 594:	00090b93          	mv	s7,s2
+    for (const char *p = fmt; *p != '\0'; p++) {
+ 598:	001b8913          	addi	s2,s7,1
+ 59c:	00048413          	mv	s0,s1
+ 5a0:	fa1ff06f          	j	540 <kprintf+0x7c>
+        switch (*p) {
+ 5a4:	00194783          	lbu	a5,1(s2)
+ 5a8:	05478063          	beq	a5,s4,5e8 <kprintf+0x124>
+ 5ac:	06fa6463          	bltu	s4,a5,614 <kprintf+0x150>
+ 5b0:	11678663          	beq	a5,s6,6bc <kprintf+0x1f8>
+ 5b4:	02fb6463          	bltu	s6,a5,5dc <kprintf+0x118>
+                uart_putc('%');
+ 5b8:	00098513          	mv	a0,s3
+        switch (*p) {
+ 5bc:	0f378063          	beq	a5,s3,69c <kprintf+0x1d8>
+                uart_putc('%');
+ 5c0:	02500513          	li	a0,37
+ 5c4:	00000097          	auipc	ra,0x0
+ 5c8:	168080e7          	jalr	360(ra) # 72c <uart_putc>
+                uart_putc(*p);
+ 5cc:	00194503          	lbu	a0,1(s2)
+ 5d0:	00000097          	auipc	ra,0x0
+ 5d4:	15c080e7          	jalr	348(ra) # 72c <uart_putc>
+ 5d8:	1340006f          	j	70c <kprintf+0x248>
+        switch (*p) {
+ 5dc:	0b978863          	beq	a5,s9,68c <kprintf+0x1c8>
+ 5e0:	06400713          	li	a4,100
+ 5e4:	fce79ee3          	bne	a5,a4,5c0 <kprintf+0xfc>
+                int32_t d = va_arg(args, int32_t);
+ 5e8:	00c12783          	lw	a5,12(sp)
+                print_num((uint32_t)d, 10, false, true);
+ 5ec:	00100693          	li	a3,1
+                int32_t d = va_arg(args, int32_t);
+ 5f0:	00478713          	addi	a4,a5,4
+ 5f4:	00e12623          	sw	a4,12(sp)
+                print_num((uint32_t)d, 10, false, true);
+ 5f8:	00000613          	li	a2,0
+ 5fc:	00a00593          	li	a1,10
+ 600:	0007a503          	lw	a0,0(a5)
+ 604:	00000097          	auipc	ra,0x0
+ 608:	d7c080e7          	jalr	-644(ra) # 380 <print_num>
+                count++;
+ 60c:	00140493          	addi	s1,s0,1
+                break;
+ 610:	f89ff06f          	j	598 <kprintf+0xd4>
+        switch (*p) {
+ 614:	09578a63          	beq	a5,s5,6a8 <kprintf+0x1e4>
+ 618:	04fae863          	bltu	s5,a5,668 <kprintf+0x1a4>
+ 61c:	0b878c63          	beq	a5,s8,6d4 <kprintf+0x210>
+ 620:	07300713          	li	a4,115
+ 624:	f8e79ee3          	bne	a5,a4,5c0 <kprintf+0xfc>
+                const char *s = va_arg(args, const char *);
+ 628:	00c12783          	lw	a5,12(sp)
+ 62c:	0007a903          	lw	s2,0(a5)
+ 630:	00478713          	addi	a4,a5,4
+ 634:	00e12623          	sw	a4,12(sp)
+                if (!s) s = "(null)";
+ 638:	00091663          	bnez	s2,644 <kprintf+0x180>
+ 63c:	00001937          	lui	s2,0x1
+ 640:	a0890913          	addi	s2,s2,-1528 # a08 <__modsi3+0x18c>
+ 644:	00040493          	mv	s1,s0
+                while (*s) {
+ 648:	408487b3          	sub	a5,s1,s0
+ 64c:	00f907b3          	add	a5,s2,a5
+ 650:	0007c503          	lbu	a0,0(a5)
+ 654:	f40502e3          	beqz	a0,598 <kprintf+0xd4>
+                    uart_putc(*s++);
+ 658:	00000097          	auipc	ra,0x0
+ 65c:	0d4080e7          	jalr	212(ra) # 72c <uart_putc>
+                    count++;
+ 660:	00148493          	addi	s1,s1,1
+ 664:	fe5ff06f          	j	648 <kprintf+0x184>
+        switch (*p) {
+ 668:	07800713          	li	a4,120
+ 66c:	f4e79ae3          	bne	a5,a4,5c0 <kprintf+0xfc>
+                uint32_t x = va_arg(args, uint32_t);
+ 670:	00c12783          	lw	a5,12(sp)
+                print_num(x, 16, false, false);
+ 674:	00000693          	li	a3,0
+ 678:	00000613          	li	a2,0
+                uint32_t x = va_arg(args, uint32_t);
+ 67c:	00478713          	addi	a4,a5,4
+ 680:	00e12623          	sw	a4,12(sp)
+                print_num(x, 16, true, false);
+ 684:	01000593          	li	a1,16
+ 688:	f79ff06f          	j	600 <kprintf+0x13c>
+                char c = (char)va_arg(args, int);
+ 68c:	00c12783          	lw	a5,12(sp)
+                uart_putc(c);
+ 690:	0007c503          	lbu	a0,0(a5)
+                char c = (char)va_arg(args, int);
+ 694:	00478713          	addi	a4,a5,4
+ 698:	00e12623          	sw	a4,12(sp)
+                uart_putc('%');
+ 69c:	00000097          	auipc	ra,0x0
+ 6a0:	090080e7          	jalr	144(ra) # 72c <uart_putc>
+                count++;
+ 6a4:	f69ff06f          	j	60c <kprintf+0x148>
+                uint32_t u = va_arg(args, uint32_t);
+ 6a8:	00c12783          	lw	a5,12(sp)
+                print_num(u, 10, false, false);
+ 6ac:	00000693          	li	a3,0
+                uint32_t u = va_arg(args, uint32_t);
+ 6b0:	00478713          	addi	a4,a5,4
+ 6b4:	00e12623          	sw	a4,12(sp)
+                print_num(u, 10, false, false);
+ 6b8:	f41ff06f          	j	5f8 <kprintf+0x134>
+                uint32_t x = va_arg(args, uint32_t);
+ 6bc:	00c12783          	lw	a5,12(sp)
+                print_num(x, 16, true, false);
+ 6c0:	00000693          	li	a3,0
+ 6c4:	00100613          	li	a2,1
+                uint32_t x = va_arg(args, uint32_t);
+ 6c8:	00478713          	addi	a4,a5,4
+ 6cc:	00e12623          	sw	a4,12(sp)
+                print_num(x, 16, true, false);
+ 6d0:	fb5ff06f          	j	684 <kprintf+0x1c0>
+                uint32_t ptr = va_arg(args, uint32_t);
+ 6d4:	00c12783          	lw	a5,12(sp)
+                uart_puts("0x");
+ 6d8:	00001537          	lui	a0,0x1
+ 6dc:	a1050513          	addi	a0,a0,-1520 # a10 <__modsi3+0x194>
+                uint32_t ptr = va_arg(args, uint32_t);
+ 6e0:	0007a483          	lw	s1,0(a5)
+ 6e4:	00478713          	addi	a4,a5,4
+ 6e8:	00e12623          	sw	a4,12(sp)
+                uart_puts("0x");
+ 6ec:	00000097          	auipc	ra,0x0
+ 6f0:	0c0080e7          	jalr	192(ra) # 7ac <uart_puts>
+                print_num(ptr, 16, false, false);
+ 6f4:	00000693          	li	a3,0
+ 6f8:	00000613          	li	a2,0
+ 6fc:	01000593          	li	a1,16
+ 700:	00048513          	mv	a0,s1
+ 704:	00000097          	auipc	ra,0x0
+ 708:	c7c080e7          	jalr	-900(ra) # 380 <print_num>
+                count += 2;
+ 70c:	00240493          	addi	s1,s0,2
+                break;
+ 710:	e89ff06f          	j	598 <kprintf+0xd4>
+
+00000714 <uart_init>:
+#include "uart.h"
+
+void uart_init(uint8_t baud_code)
+{
+    UART_REG_BAUD = (uint32_t)(baud_code & 0x07);
+ 714:	200007b7          	lui	a5,0x20000
+ 718:	00757513          	andi	a0,a0,7
+ 71c:	00a7a423          	sw	a0,8(a5) # 20000008 <_stack_top+0xfffe008>
+    UART_REG_STATUS_CLEAR = 0x01; // Clear any pending status
+ 720:	00100713          	li	a4,1
+ 724:	00e7a623          	sw	a4,12(a5)
+}
+ 728:	00008067          	ret
+
+0000072c <uart_putc>:
+
+void uart_putc(char c)
+{
+    // Auto-convert LF to CRLF for standard serial terminals
+    if (c == '\n') {
+ 72c:	00a00793          	li	a5,10
+ 730:	02f51263          	bne	a0,a5,754 <uart_putc+0x28>
+        while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
+ 734:	20000737          	lui	a4,0x20000
+ 738:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
+ 73c:	00072783          	lw	a5,0(a4)
+ 740:	0017f793          	andi	a5,a5,1
+ 744:	fe079ce3          	bnez	a5,73c <uart_putc+0x10>
+            ;
+        UART_REG_DATA = (uint32_t)'\r';
+ 748:	200007b7          	lui	a5,0x20000
+ 74c:	00d00713          	li	a4,13
+ 750:	00e7a023          	sw	a4,0(a5) # 20000000 <_stack_top+0xfffe000>
+    }
+
+    while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
+ 754:	20000737          	lui	a4,0x20000
+ 758:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
+ 75c:	00072783          	lw	a5,0(a4)
+ 760:	0017f793          	andi	a5,a5,1
+ 764:	fe079ce3          	bnez	a5,75c <uart_putc+0x30>
+        ;
+    UART_REG_DATA = (uint32_t)(uint8_t)c;
+ 768:	200007b7          	lui	a5,0x20000
+ 76c:	00a7a023          	sw	a0,0(a5) # 20000000 <_stack_top+0xfffe000>
+}
+ 770:	00008067          	ret
+
+00000774 <uart_getc>:
+
+char uart_getc(void)
+{
+    while (!(UART_REG_STATUS & UART_STATUS_RX_VALID))
+ 774:	20000737          	lui	a4,0x20000
+ 778:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
+ 77c:	00072783          	lw	a5,0(a4)
+ 780:	0027f793          	andi	a5,a5,2
+ 784:	fe078ce3          	beqz	a5,77c <uart_getc+0x8>
+        ;
+    return (char)(UART_REG_DATA & 0xFF);
+ 788:	200007b7          	lui	a5,0x20000
+ 78c:	0007a503          	lw	a0,0(a5) # 20000000 <_stack_top+0xfffe000>
+}
+ 790:	0ff57513          	zext.b	a0,a0
+ 794:	00008067          	ret
+
+00000798 <uart_has_rx>:
+
+bool uart_has_rx(void)
+{
+    return (UART_REG_STATUS & UART_STATUS_RX_VALID) != 0;
+ 798:	200007b7          	lui	a5,0x20000
+ 79c:	0047a503          	lw	a0,4(a5) # 20000004 <_stack_top+0xfffe004>
+ 7a0:	00155513          	srli	a0,a0,0x1
+}
+ 7a4:	00157513          	andi	a0,a0,1
+ 7a8:	00008067          	ret
+
+000007ac <uart_puts>:
+
+void uart_puts(const char *str)
+{
+    if (!str) return;
+ 7ac:	02051663          	bnez	a0,7d8 <uart_puts+0x2c>
+ 7b0:	00008067          	ret
+    while (*str) {
+        uart_putc(*str++);
+ 7b4:	00140413          	addi	s0,s0,1
+ 7b8:	00000097          	auipc	ra,0x0
+ 7bc:	f74080e7          	jalr	-140(ra) # 72c <uart_putc>
+    while (*str) {
+ 7c0:	00044503          	lbu	a0,0(s0)
+ 7c4:	fe0518e3          	bnez	a0,7b4 <uart_puts+0x8>
+    }
+}
+ 7c8:	00c12083          	lw	ra,12(sp)
+ 7cc:	00812403          	lw	s0,8(sp)
+ 7d0:	01010113          	addi	sp,sp,16
+ 7d4:	00008067          	ret
+{
+ 7d8:	ff010113          	addi	sp,sp,-16
+ 7dc:	00812423          	sw	s0,8(sp)
+ 7e0:	00112623          	sw	ra,12(sp)
+ 7e4:	00050413          	mv	s0,a0
+ 7e8:	fd9ff06f          	j	7c0 <uart_puts+0x14>
+
+000007ec <gpio_set_leds>:
+#include "gpio.h"
+
+void gpio_set_leds(uint16_t mask)
+{
+    GPIO_REG_DATA_OUT = (uint32_t)mask;
+ 7ec:	300007b7          	lui	a5,0x30000
+ 7f0:	00a7a023          	sw	a0,0(a5) # 30000000 <_stack_top+0x1fffe000>
+}
+ 7f4:	00008067          	ret
+
+000007f8 <__divsi3>:
+ 7f8:	06054063          	bltz	a0,858 <__umodsi3+0x10>
+ 7fc:	0605c663          	bltz	a1,868 <__umodsi3+0x20>
+
+00000800 <__hidden___udivsi3>:
+ 800:	00058613          	mv	a2,a1
+ 804:	00050593          	mv	a1,a0
+ 808:	fff00513          	li	a0,-1
+ 80c:	02060c63          	beqz	a2,844 <__hidden___udivsi3+0x44>
+ 810:	00100693          	li	a3,1
+ 814:	00b67a63          	bgeu	a2,a1,828 <__hidden___udivsi3+0x28>
+ 818:	00c05863          	blez	a2,828 <__hidden___udivsi3+0x28>
+ 81c:	00161613          	slli	a2,a2,0x1
+ 820:	00169693          	slli	a3,a3,0x1
+ 824:	feb66ae3          	bltu	a2,a1,818 <__hidden___udivsi3+0x18>
+ 828:	00000513          	li	a0,0
+ 82c:	00c5e663          	bltu	a1,a2,838 <__hidden___udivsi3+0x38>
+ 830:	40c585b3          	sub	a1,a1,a2
+ 834:	00d56533          	or	a0,a0,a3
+ 838:	0016d693          	srli	a3,a3,0x1
+ 83c:	00165613          	srli	a2,a2,0x1
+ 840:	fe0696e3          	bnez	a3,82c <__hidden___udivsi3+0x2c>
+ 844:	00008067          	ret
+
+00000848 <__umodsi3>:
+ 848:	00008293          	mv	t0,ra
+ 84c:	fb5ff0ef          	jal	800 <__hidden___udivsi3>
+ 850:	00058513          	mv	a0,a1
+ 854:	00028067          	jr	t0
+ 858:	40a00533          	neg	a0,a0
+ 85c:	00b04863          	bgtz	a1,86c <__umodsi3+0x24>
+ 860:	40b005b3          	neg	a1,a1
+ 864:	f9dff06f          	j	800 <__hidden___udivsi3>
+ 868:	40b005b3          	neg	a1,a1
+ 86c:	00008293          	mv	t0,ra
+ 870:	f91ff0ef          	jal	800 <__hidden___udivsi3>
+ 874:	40a00533          	neg	a0,a0
+ 878:	00028067          	jr	t0
+
+0000087c <__modsi3>:
+ 87c:	00008293          	mv	t0,ra
+ 880:	0005ca63          	bltz	a1,894 <__modsi3+0x18>
+ 884:	00054c63          	bltz	a0,89c <__modsi3+0x20>
+ 888:	f79ff0ef          	jal	800 <__hidden___udivsi3>
+ 88c:	00058513          	mv	a0,a1
+ 890:	00028067          	jr	t0
+ 894:	40b005b3          	neg	a1,a1
+ 898:	fe0558e3          	bgez	a0,888 <__modsi3+0xc>
+ 89c:	40a00533          	neg	a0,a0
+ 8a0:	f61ff0ef          	jal	800 <__hidden___udivsi3>
+ 8a4:	40b00533          	neg	a0,a1
+ 8a8:	00028067          	jr	t0

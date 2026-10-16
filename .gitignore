@@ -1,0 +1,26 @@
+# Vivado and Synthesis Artifacts
+build/
+.Xil/
+*.jou
+*.log
+*.str
+*.dcp
+*.rpt
+*.pb
+*.wdb
+*.hw/
+*.ip_user_files/
+
+# Simulation binaries and waveforms
+sim/*.vvp
+sim/*.vcd
+
+# Firmware intermediate build objects
+firmware/**/*.o
+firmware/**/startup.o
+
+# System and editor temporary files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

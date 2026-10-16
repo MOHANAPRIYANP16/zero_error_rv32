@@ -1,0 +1,178 @@
+
+blinky.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+    .global _start
+    .type _start, @function
+
+_start:
+    /* Disable interrupts / setup stack pointer at top of Data RAM */
+    la   sp, _stack_top
+   0:	10002117          	auipc	sp,0x10002
+   4:	00010113          	mv	sp,sp
+
+    /* Zero out the .bss section */
+    la   a0, _sbss
+   8:	10000517          	auipc	a0,0x10000
+   c:	ff850513          	addi	a0,a0,-8 # 10000000 <_ebss>
+    la   a1, _ebss
+  10:	10000597          	auipc	a1,0x10000
+  14:	ff058593          	addi	a1,a1,-16 # 10000000 <_ebss>
+    bge  a0, a1, 2f
+  18:	00b55863          	bge	a0,a1,28 <_start+0x28>
+1:
+    sw   zero, 0(a0)
+  1c:	00052023          	sw	zero,0(a0)
+    addi a0, a0, 4
+  20:	00450513          	addi	a0,a0,4
+    blt  a0, a1, 1b
+  24:	feb54ce3          	blt	a0,a1,1c <_start+0x1c>
+2:
+
+    /* Copy initialized .data section from Code ROM (LMA) to Data RAM (VMA) */
+    la   a0, _sdata
+  28:	10000517          	auipc	a0,0x10000
+  2c:	fd850513          	addi	a0,a0,-40 # 10000000 <_ebss>
+    la   a1, _edata
+  30:	10000597          	auipc	a1,0x10000
+  34:	fd058593          	addi	a1,a1,-48 # 10000000 <_ebss>
+    la   a2, _sidata
+  38:	00000617          	auipc	a2,0x0
+  3c:	0dc60613          	addi	a2,a2,220 # 114 <_sidata>
+    bge  a0, a1, 4f
+  40:	00b55c63          	bge	a0,a1,58 <_start+0x58>
+3:
+    lw   t0, 0(a2)
+  44:	00062283          	lw	t0,0(a2)
+    sw   t0, 0(a0)
+  48:	00552023          	sw	t0,0(a0)
+    addi a0, a0, 4
+  4c:	00450513          	addi	a0,a0,4
+    addi a2, a2, 4
+  50:	00460613          	addi	a2,a2,4
+    blt  a0, a1, 3b
+  54:	feb548e3          	blt	a0,a1,44 <_start+0x44>
+4:
+
+    /* Call application entry point */
+    call main
+  58:	00000097          	auipc	ra,0x0
+  5c:	00c080e7          	jalr	12(ra) # 64 <main>
+
+00000060 <hang>:
+
+    /* Trap loop if main() exits */
+hang:
+    j    hang
+  60:	0000006f          	j	60 <hang>
+
+00000064 <main>:
+#include "../../common/soc_regs.h"
+#include "../../common/kprintf.h"
+#include "../../drivers/gpio.h"
+
+int main(void)
+{
+  64:	ff010113          	addi	sp,sp,-16 # 10001ff0 <_ebss+0x1ff0>
+    // Initialize GPIO LEDs to all OFF
+    gpio_set_leds(0x0000);
+  68:	00000513          	li	a0,0
+{
+  6c:	00112623          	sw	ra,12(sp)
+    gpio_set_leds(0x0000);
+  70:	00000097          	auipc	ra,0x0
+  74:	064080e7          	jalr	100(ra) # d4 <gpio_set_leds>
+
+    while (1) {
+        // Turn ON LED 0
+        gpio_set_led(0, true);
+  78:	00100593          	li	a1,1
+  7c:	00000513          	li	a0,0
+  80:	00000097          	auipc	ra,0x0
+  84:	060080e7          	jalr	96(ra) # e0 <gpio_set_led>
+        delay_ms(500);
+  88:	1f400513          	li	a0,500
+  8c:	00000097          	auipc	ra,0x0
+  90:	028080e7          	jalr	40(ra) # b4 <delay_ms>
+
+        // Turn OFF LED 0
+        gpio_set_led(0, false);
+  94:	00000593          	li	a1,0
+  98:	00000513          	li	a0,0
+  9c:	00000097          	auipc	ra,0x0
+  a0:	044080e7          	jalr	68(ra) # e0 <gpio_set_led>
+        delay_ms(500);
+  a4:	1f400513          	li	a0,500
+  a8:	00000097          	auipc	ra,0x0
+  ac:	00c080e7          	jalr	12(ra) # b4 <delay_ms>
+    while (1) {
+  b0:	fc9ff06f          	j	78 <main+0x14>
+
+000000b4 <delay_ms>:
+    );
+}
+
+void delay_ms(uint32_t ms)
+{
+    while (ms--) {
+  b4:	00051463          	bnez	a0,bc <delay_ms+0x8>
+        // 25,000 cycles / 2 = 12,500 loop iterations per ms
+        delay_cycles(12500);
+    }
+}
+  b8:	00008067          	ret
+    __asm__ volatile (
+  bc:	00003737          	lui	a4,0x3
+    while (ms--) {
+  c0:	fff50513          	addi	a0,a0,-1
+    __asm__ volatile (
+  c4:	0d470713          	addi	a4,a4,212 # 30d4 <_sidata+0x2fc0>
+  c8:	fff70713          	addi	a4,a4,-1
+  cc:	fe071ee3          	bnez	a4,c8 <delay_ms+0x14>
+  d0:	fe5ff06f          	j	b4 <delay_ms>
+
+000000d4 <gpio_set_leds>:
+#include "gpio.h"
+
+void gpio_set_leds(uint16_t mask)
+{
+    GPIO_REG_DATA_OUT = (uint32_t)mask;
+  d4:	300007b7          	lui	a5,0x30000
+  d8:	00a7a023          	sw	a0,0(a5) # 30000000 <_stack_top+0x1fffe000>
+}
+  dc:	00008067          	ret
+
+000000e0 <gpio_set_led>:
+    return (uint16_t)(GPIO_REG_DATA_OUT & 0xFFFF);
+}
+
+void gpio_set_led(uint8_t pin, bool state)
+{
+    if (pin > 15) return;
+  e0:	00f00793          	li	a5,15
+  e4:	02a7e063          	bltu	a5,a0,104 <gpio_set_led+0x24>
+    uint32_t current = GPIO_REG_DATA_OUT;
+  e8:	300006b7          	lui	a3,0x30000
+  ec:	0006a703          	lw	a4,0(a3) # 30000000 <_stack_top+0x1fffe000>
+    if (state) {
+        current |= (1UL << pin);
+  f0:	00100793          	li	a5,1
+  f4:	00a79533          	sll	a0,a5,a0
+    if (state) {
+  f8:	00058863          	beqz	a1,108 <gpio_set_led+0x28>
+        current |= (1UL << pin);
+  fc:	00a76733          	or	a4,a4,a0
+    } else {
+        current &= ~(1UL << pin);
+    }
+    GPIO_REG_DATA_OUT = current;
+ 100:	00e6a023          	sw	a4,0(a3)
+}
+ 104:	00008067          	ret
+        current &= ~(1UL << pin);
+ 108:	fff54513          	not	a0,a0
+ 10c:	00e57733          	and	a4,a0,a4
+ 110:	ff1ff06f          	j	100 <gpio_set_led+0x20>
