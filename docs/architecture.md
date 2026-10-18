@@ -23,7 +23,7 @@ graph TD
         WB --> RF
     end
 
-    subgraph "Native PicoRV32 Memory Bus Interconnect"
+    subgraph "Native Memory Bus Interconnect"
         CORE_BUS["CPU Master Bus (mem_valid, addr, wdata, wstrb, ready, rdata)"]
         INTERCONNECT["soc_bus_interconnect"]
         CORE_BUS <--> INTERCONNECT
