@@ -204,5 +204,9 @@ module tb_i2c;
 
         $finish;
     end
+     initial begin
+        $dumpfile("tb_i2c.vcd");
+        $dumpvars(0,tb_i2c);
+    end
 
 endmodule

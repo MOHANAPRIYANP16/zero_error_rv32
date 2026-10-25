@@ -147,5 +147,9 @@ module tb_soc_top;
 
         $finish;
     end
+    initial begin
+        $dumpfile("tb_soc_top.vcd");
+        $dumpvars(0,tb_soc_top);
+    end
 
 endmodule

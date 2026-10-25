@@ -53,6 +53,7 @@ add_files -norecurse [list \
     "$SOC_ROOT/rtl/peripheral/baud_rate_rx.v" \
     "$SOC_ROOT/rtl/peripheral/uart_tx.v" \
     "$SOC_ROOT/rtl/peripheral/uart_rx.v" \
+    "$SOC_ROOT/rtl/peripheral/uart_fifo.v" \
     "$SOC_ROOT/rtl/peripheral/uart_peripheral.v" \
     "$SOC_ROOT/rtl/peripheral/scl_gen.v" \
     "$SOC_ROOT/rtl/peripheral/i2c_master.v" \

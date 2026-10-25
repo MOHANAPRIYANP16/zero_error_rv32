@@ -26,7 +26,15 @@ CFLAGS        ?= -march=rv32i -mabi=ilp32 -mno-relax -ffreestanding -nostdlib \
                  -Wall -Wextra -Os -g \
                  -I$(COMMON_DIR) -I$(DRIVERS_DIR)
 
-LDFLAGS       ?= -T $(COMMON_DIR)/linker.ld -nostdlib -Wl,--no-relax -Wl,--gc-sections
+BOOTLOADER    ?= 1
+
+ifeq ($(BOOTLOADER),1)
+    LINKER_SCRIPT ?= $(COMMON_DIR)/linker_boot_app.ld
+else
+    LINKER_SCRIPT ?= $(COMMON_DIR)/linker.ld
+endif
+
+LDFLAGS       ?= -T $(LINKER_SCRIPT) -nostdlib -Wl,--no-relax -Wl,--gc-sections
 LDLIBS        ?= -lgcc
 
 # App & Local Common object files
@@ -36,7 +44,7 @@ ALL_OBJS       = $(APP_OBJS) $(COMMON_OBJS)
 
 all: $(TARGET).elf $(TARGET).bin $(TARGET).dump $(TARGET).mem
 
-$(TARGET).elf: $(ALL_OBJS) $(COMMON_DIR)/linker.ld
+$(TARGET).elf: $(ALL_OBJS) $(LINKER_SCRIPT)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(ALL_OBJS) $(LDLIBS)
 	$(SIZE) $@
 
@@ -65,7 +73,7 @@ $(TARGET).dump: $(TARGET).elf
 	$(OBJDUMP) -d -S $< > $@
 
 $(TARGET).mem: $(TARGET).bin $(TOOLS_DIR)/elf2mem.py
-	$(PYTHON) $(TOOLS_DIR)/elf2mem.py $(TARGET).bin 1024 $(TARGET).mem
+	$(PYTHON) $(TOOLS_DIR)/elf2mem.py $(TARGET).bin 4096 $(TARGET).mem
 
 # Install the generated .mem directly into SoC instruction memory for Vivado simulation / bitstream
 install: $(TARGET).mem

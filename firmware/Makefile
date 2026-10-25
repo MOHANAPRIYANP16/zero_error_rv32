@@ -8,7 +8,8 @@ APPS = bootloader \
        app/02_hello_uart \
        app/03_gpio_demo \
        app/04_i2c_scan \
-       app/05_integrated_demo
+       app/05_integrated_demo \
+       app/06_r307_fingerprint
 
 all:
 	@for dir in $(APPS); do \
@@ -44,7 +45,8 @@ load_i2c:
 	$(MAKE) -C app/04_i2c_scan install
 
 load_demo:
-	$(MAKE) -C app/05_integrated_demo install
+	$(MAKE) -C app/05_integrated_demo \
+       app/06_r307_fingerprint install
 
 # Upload helper to send boot_app over UART
 upload:

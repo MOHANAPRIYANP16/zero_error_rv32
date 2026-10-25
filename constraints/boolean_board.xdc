@@ -32,9 +32,13 @@ set_property -dict {PACKAGE_PIN A3 IOSTANDARD LVCMOS33} [get_ports {led[13]}]
 set_property -dict {PACKAGE_PIN B4 IOSTANDARD LVCMOS33} [get_ports {led[14]}]
 set_property -dict {PACKAGE_PIN A4 IOSTANDARD LVCMOS33} [get_ports {led[15]}]
 
-# Onboard USB-UART Bridge
+# Onboard USB-UART Bridge (UART0 - PC Console / Bootloader)
 set_property -dict {PACKAGE_PIN V12 IOSTANDARD LVCMOS33} [get_ports UART_rxd]
 set_property -dict {PACKAGE_PIN U11 IOSTANDARD LVCMOS33} [get_ports UART_txd]
+
+# Pmod A UART1 (R307 Fingerprint Sensor: pin 3 = FPGA TX -> R307 RX, pin 4 = FPGA RX -> R307 TX)
+set_property -dict {PACKAGE_PIN B14 IOSTANDARD LVCMOS33} [get_ports UART1_txd]
+set_property -dict {PACKAGE_PIN A14 IOSTANDARD LVCMOS33} [get_ports UART1_rxd]
 
 # I2C Bus Pins (with pull-up enabled for open-drain operation)
 set_property -dict {PACKAGE_PIN T5 IOSTANDARD LVCMOS33 PULLUP true} [get_ports i2c_scl]

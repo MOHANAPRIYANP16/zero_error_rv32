@@ -11,7 +11,8 @@
 //   - Reset button (active-high pin J2) synchronized to active-low rst_n
 //     with MMCM lock qualification
 // Pin mappings:
-//   - UART: TX = U11, RX = V12
+//   - UART0 (PC USB-UART): TX = U11, RX = V12
+//   - UART1 (R307 on Pmod A): TX = B14, RX = A14
 //   - I2C:  SCL = T5, SDA = T6
 //   - LEDs: led[15:0] = {A4, B4, A3, B3, A2, B2, C3, E6, E5, E3, E2, E1, F2, F1, G2, G1}
 // ============================================================================
@@ -22,6 +23,8 @@ module fpga_top (
     output wire [15:0] led,        // 16 on-board LEDs
     input  wire        UART_rxd,   // USB-UART RX (into FPGA, pin V12)
     output wire        UART_txd,   // USB-UART TX (out of FPGA, pin U11)
+    input  wire        UART1_rxd,  // Pmod A Pin 4 RX (from R307 TX, pin A14)
+    output wire        UART1_txd,  // Pmod A Pin 3 TX (to R307 RX, pin B14)
     inout  wire        i2c_scl,    // I2C SCL, pin T5
     inout  wire        i2c_sda     // I2C SDA, pin T6
 );
@@ -91,7 +94,7 @@ module fpga_top (
 
     riscv_soc_top #(
         .CLK_FREQ   (25_000_000), // Peripheral baud/SCL references run at 25 MHz
-        .CODE_WORDS (1024),
+        .CODE_WORDS (4096),
         .DATA_WORDS (2048),
         .INIT_FILE  ("instruction.mem")
     ) soc (
@@ -100,6 +103,8 @@ module fpga_top (
         .clk_en              (1'b1), // Continuous 25 MHz operation
         .UART_rxd            (UART_rxd),
         .UART_txd            (UART_txd),
+        .UART1_rxd           (UART1_rxd),
+        .UART1_txd           (UART1_txd),
         .sda                 (i2c_sda),
         .scl                 (i2c_scl),
         .led                 (led),

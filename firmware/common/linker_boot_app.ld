@@ -2,7 +2,7 @@
  * linker_boot_app.ld -- Linker Script for Applications Uploaded via Bootloader
  *
  * Placed in Instruction Memory starting at APP_BASE (0x0000_0200).
- * Maximum Code size: 3584 bytes (896 words).
+ * Maximum Code size: 15872 bytes (3968 words).
  * Data RAM: 8 KB (0x1000_0000 to 0x1000_1FFF).
  * ============================================================================ */
 
@@ -10,7 +10,7 @@ ENTRY(_start)
 
 MEMORY
 {
-    ROM (rx)  : ORIGIN = 0x00000200, LENGTH = 3584
+    ROM (rx)  : ORIGIN = 0x00000200, LENGTH = 15872
     RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 8K
 }
 

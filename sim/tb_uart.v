@@ -172,4 +172,9 @@ module tb_uart;
         $finish;
     end
 
+     initial begin
+        $dumpfile("tb_uart.vcd");
+        $dumpvars(0,tb_uart);
+    end
+
 endmodule

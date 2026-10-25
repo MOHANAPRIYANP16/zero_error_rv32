@@ -4,7 +4,7 @@
 // ram_sync.v -- Dual-Port Code Memory and Byte-Addressable Data RAM
 //
 // Address ranges:
-//   Code RAM: 0x0000_0000 - 0x0000_0FFF (1024 words = 4 KB)
+//   Code RAM: 0x0000_0000 - 0x0000_3FFF (4096 words = 16 KB)
 //             Port A: Direct instruction fetch from PC (combinational/1-cycle read)
 //             Port B: PicoRV32 native bus interface for data read/write
 //             Preloaded via $readmemh("instruction.mem")
@@ -14,9 +14,11 @@
 // ============================================================================
 
 module ram_sync #(
-    parameter CODE_WORDS = 1024,
-    parameter DATA_WORDS = 2048,
-    parameter INIT_FILE  = "instruction.mem"
+    parameter CODE_WORDS  = 4096,
+    parameter CODE_ADDR_W = 12,    // 2^12 = 4096 words = 16 KB
+    parameter DATA_WORDS  = 2048,
+    parameter DATA_ADDR_W = 11,    // 2^11 = 2048 words = 8 KB
+    parameter INIT_FILE   = "instruction.mem"
 )(
     input  wire        clk,
     input  wire        rst_n,
@@ -45,7 +47,7 @@ module ram_sync #(
 );
 
     // ------------------------------------------------------------------------
-    // Code Memory (4 KB)
+    // Code Memory (16 KB)
     // ------------------------------------------------------------------------
     (* ram_style = "distributed" *) reg [31:0] code_mem [0:CODE_WORDS-1];
     integer i;
@@ -57,11 +59,12 @@ module ram_sync #(
     end
 
     // Port A: Instruction fetch
-    // Word address is pc_addr[11:2]
-    assign instruction = (pc_addr[31:12] == 20'h00000) ? code_mem[pc_addr[11:2]] : 32'h00000013;
+    wire [CODE_ADDR_W-1:0] code_pc_word_addr = pc_addr[CODE_ADDR_W+1:2];
+    assign instruction = (pc_addr[31:CODE_ADDR_W+2] == {(30-CODE_ADDR_W){1'b0}}) ?
+                         code_mem[code_pc_word_addr] : 32'h00000013;
 
     // Port B: Bus access (1 wait-state synchronous response)
-    wire [9:0] code_bus_word_addr = code_addr[11:2];
+    wire [CODE_ADDR_W-1:0] code_bus_word_addr = code_addr[CODE_ADDR_W+1:2];
 
     // Synchronous memory write (no reset on storage array)
     always @(posedge clk) begin
@@ -98,9 +101,9 @@ module ram_sync #(
             data_ram[j] = 32'd0;
     end
 
-    wire [10:0] data_bus_word_addr = data_addr[12:2];
+    wire [DATA_ADDR_W-1:0] data_bus_word_addr = data_addr[DATA_ADDR_W+1:2];
 
-    // Synchronous memory write & read (BRAM template: no reset on memory or rdata)
+    // Synchronous memory write & read
     always @(posedge clk) begin
         if (data_sel && data_valid && !data_ready) begin
             if (data_wstrb[0]) data_ram[data_bus_word_addr][7:0]   <= data_wdata[7:0];

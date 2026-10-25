@@ -4,731 +4,758 @@ hello_uart.elf:     file format elf32-littleriscv
 
 Disassembly of section .text:
 
-00000000 <_start>:
+00000200 <_start>:
     .global _start
     .type _start, @function
 
 _start:
     /* Disable interrupts / setup stack pointer at top of Data RAM */
     la   sp, _stack_top
-   0:	10002117          	auipc	sp,0x10002
-   4:	00010113          	mv	sp,sp
+ 200:	10002117          	auipc	sp,0x10002
+ 204:	e0010113          	addi	sp,sp,-512 # 10002000 <_stack_top>
 
     /* Zero out the .bss section */
     la   a0, _sbss
-   8:	10000517          	auipc	a0,0x10000
-   c:	ff850513          	addi	a0,a0,-8 # 10000000 <_ebss>
+ 208:	10000517          	auipc	a0,0x10000
+ 20c:	df850513          	addi	a0,a0,-520 # 10000000 <_ebss>
     la   a1, _ebss
-  10:	10000597          	auipc	a1,0x10000
-  14:	ff058593          	addi	a1,a1,-16 # 10000000 <_ebss>
+ 210:	10000597          	auipc	a1,0x10000
+ 214:	df058593          	addi	a1,a1,-528 # 10000000 <_ebss>
     bge  a0, a1, 2f
-  18:	00b55863          	bge	a0,a1,28 <_start+0x28>
+ 218:	00b55863          	bge	a0,a1,228 <_start+0x28>
 1:
     sw   zero, 0(a0)
-  1c:	00052023          	sw	zero,0(a0)
+ 21c:	00052023          	sw	zero,0(a0)
     addi a0, a0, 4
-  20:	00450513          	addi	a0,a0,4
+ 220:	00450513          	addi	a0,a0,4
     blt  a0, a1, 1b
-  24:	feb54ce3          	blt	a0,a1,1c <_start+0x1c>
+ 224:	feb54ce3          	blt	a0,a1,21c <_start+0x1c>
 2:
 
     /* Copy initialized .data section from Code ROM (LMA) to Data RAM (VMA) */
     la   a0, _sdata
-  28:	10000517          	auipc	a0,0x10000
-  2c:	fd850513          	addi	a0,a0,-40 # 10000000 <_ebss>
+ 228:	10000517          	auipc	a0,0x10000
+ 22c:	dd850513          	addi	a0,a0,-552 # 10000000 <_ebss>
     la   a1, _edata
-  30:	10000597          	auipc	a1,0x10000
-  34:	fd058593          	addi	a1,a1,-48 # 10000000 <_ebss>
+ 230:	10000597          	auipc	a1,0x10000
+ 234:	dd058593          	addi	a1,a1,-560 # 10000000 <_ebss>
     la   a2, _sidata
-  38:	00001617          	auipc	a2,0x1
-  3c:	8a060613          	addi	a2,a2,-1888 # 8d8 <_sidata>
+ 238:	00001617          	auipc	a2,0x1
+ 23c:	8c860613          	addi	a2,a2,-1848 # b00 <_sidata>
     bge  a0, a1, 4f
-  40:	00b55c63          	bge	a0,a1,58 <_start+0x58>
+ 240:	00b55c63          	bge	a0,a1,258 <_start+0x58>
 3:
     lw   t0, 0(a2)
-  44:	00062283          	lw	t0,0(a2)
+ 244:	00062283          	lw	t0,0(a2)
     sw   t0, 0(a0)
-  48:	00552023          	sw	t0,0(a0)
+ 248:	00552023          	sw	t0,0(a0)
     addi a0, a0, 4
-  4c:	00450513          	addi	a0,a0,4
+ 24c:	00450513          	addi	a0,a0,4
     addi a2, a2, 4
-  50:	00460613          	addi	a2,a2,4
+ 250:	00460613          	addi	a2,a2,4
     blt  a0, a1, 3b
-  54:	feb548e3          	blt	a0,a1,44 <_start+0x44>
+ 254:	feb548e3          	blt	a0,a1,244 <_start+0x44>
 4:
 
     /* Call application entry point */
     call main
-  58:	00000097          	auipc	ra,0x0
-  5c:	00c080e7          	jalr	12(ra) # 64 <main>
+ 258:	00000097          	auipc	ra,0x0
+ 25c:	00c080e7          	jalr	12(ra) # 264 <main>
 
-00000060 <hang>:
+00000260 <hang>:
 
     /* Trap loop if main() exits */
 hang:
     j    hang
-  60:	0000006f          	j	60 <hang>
+ 260:	0000006f          	j	260 <hang>
 
-00000064 <main>:
+00000264 <main>:
 #include "../../common/kprintf.h"
 #include "../../drivers/uart.h"
 #include "../../drivers/gpio.h"
 
 int main(void)
 {
-  64:	ff010113          	addi	sp,sp,-16 # 10001ff0 <_ebss+0x1ff0>
+ 264:	fe010113          	addi	sp,sp,-32
     // Initialize UART at 115200 baud
     uart_init(UART_BAUD_115200);
-  68:	00400513          	li	a0,4
+ 268:	00400513          	li	a0,4
 {
-  6c:	00112623          	sw	ra,12(sp)
-  70:	00812423          	sw	s0,8(sp)
-  74:	00912223          	sw	s1,4(sp)
-  78:	01212023          	sw	s2,0(sp)
+ 26c:	00112e23          	sw	ra,28(sp)
+ 270:	00812c23          	sw	s0,24(sp)
+ 274:	00912a23          	sw	s1,20(sp)
+ 278:	01212823          	sw	s2,16(sp)
+ 27c:	01312623          	sw	s3,12(sp)
+ 280:	01412423          	sw	s4,8(sp)
     uart_init(UART_BAUD_115200);
-  7c:	00000097          	auipc	ra,0x0
-  80:	4b0080e7          	jalr	1200(ra) # 52c <uart_init>
+ 284:	00000097          	auipc	ra,0x0
+ 288:	4ec080e7          	jalr	1260(ra) # 770 <uart_init>
 
     // Initial LED indication
     gpio_set_leds(0x0001);
-  84:	00100513          	li	a0,1
-  88:	00000097          	auipc	ra,0x0
-  8c:	57c080e7          	jalr	1404(ra) # 604 <gpio_set_leds>
+ 28c:	00100513          	li	a0,1
+ 290:	00000097          	auipc	ra,0x0
+ 294:	5a0080e7          	jalr	1440(ra) # 830 <gpio_set_leds>
 
     delay_ms(100);
-  90:	06400513          	li	a0,100
-  94:	00000097          	auipc	ra,0x0
-  98:	228080e7          	jalr	552(ra) # 2bc <delay_ms>
+ 298:	06400513          	li	a0,100
+ 29c:	00000097          	auipc	ra,0x0
+ 2a0:	230080e7          	jalr	560(ra) # 4cc <delay_ms>
 
     kprintf("\n");
-  9c:	00001537          	lui	a0,0x1
-  a0:	87850513          	addi	a0,a0,-1928 # 878 <__modsi3+0x1c0>
-  a4:	00000097          	auipc	ra,0x0
-  a8:	238080e7          	jalr	568(ra) # 2dc <kprintf>
+ 2a4:	00001537          	lui	a0,0x1
+ 2a8:	aa050513          	addi	a0,a0,-1376 # aa0 <__modsi3+0x1bc>
+ 2ac:	00000097          	auipc	ra,0x0
+ 2b0:	268080e7          	jalr	616(ra) # 514 <kprintf>
     kprintf("====================================================\n");
-  ac:	00000437          	lui	s0,0x0
-  b0:	6ec40513          	addi	a0,s0,1772 # 6ec <__modsi3+0x34>
-  b4:	00000097          	auipc	ra,0x0
-  b8:	228080e7          	jalr	552(ra) # 2dc <kprintf>
+ 2b4:	00001437          	lui	s0,0x1
+ 2b8:	91440513          	addi	a0,s0,-1772 # 914 <__modsi3+0x30>
+ 2bc:	00000097          	auipc	ra,0x0
+ 2c0:	258080e7          	jalr	600(ra) # 514 <kprintf>
     kprintf("   Welcome to Custom RV32I Single-Cycle SoC!\n");
-  bc:	00000537          	lui	a0,0x0
-  c0:	72450513          	addi	a0,a0,1828 # 724 <__modsi3+0x6c>
-  c4:	00000097          	auipc	ra,0x0
-  c8:	218080e7          	jalr	536(ra) # 2dc <kprintf>
+ 2c4:	00001537          	lui	a0,0x1
+ 2c8:	94c50513          	addi	a0,a0,-1716 # 94c <__modsi3+0x68>
+ 2cc:	00000097          	auipc	ra,0x0
+ 2d0:	248080e7          	jalr	584(ra) # 514 <kprintf>
     kprintf("   Board: Real Digital Boolean (XC7S50-CSGA324)\n");
-  cc:	00000537          	lui	a0,0x0
-  d0:	75450513          	addi	a0,a0,1876 # 754 <__modsi3+0x9c>
-  d4:	00000097          	auipc	ra,0x0
-  d8:	208080e7          	jalr	520(ra) # 2dc <kprintf>
+ 2d4:	00001537          	lui	a0,0x1
+ 2d8:	97c50513          	addi	a0,a0,-1668 # 97c <__modsi3+0x98>
+ 2dc:	00000097          	auipc	ra,0x0
+ 2e0:	238080e7          	jalr	568(ra) # 514 <kprintf>
     kprintf("   Core : RV32I Base Integer ISA @ 25.0 MHz\n");
-  dc:	00000537          	lui	a0,0x0
-  e0:	78850513          	addi	a0,a0,1928 # 788 <__modsi3+0xd0>
-  e4:	00000097          	auipc	ra,0x0
-  e8:	1f8080e7          	jalr	504(ra) # 2dc <kprintf>
+ 2e4:	00001537          	lui	a0,0x1
+ 2e8:	9b050513          	addi	a0,a0,-1616 # 9b0 <__modsi3+0xcc>
+ 2ec:	00000097          	auipc	ra,0x0
+ 2f0:	228080e7          	jalr	552(ra) # 514 <kprintf>
     kprintf("   ROM  : 4 KB Code RAM   [0x0000_0000 - 0x0000_0FFF]\n");
-  ec:	00000537          	lui	a0,0x0
-  f0:	7b850513          	addi	a0,a0,1976 # 7b8 <__modsi3+0x100>
-  f4:	00000097          	auipc	ra,0x0
-  f8:	1e8080e7          	jalr	488(ra) # 2dc <kprintf>
+ 2f4:	00001537          	lui	a0,0x1
+ 2f8:	9e050513          	addi	a0,a0,-1568 # 9e0 <__modsi3+0xfc>
+ 2fc:	00000097          	auipc	ra,0x0
+ 300:	218080e7          	jalr	536(ra) # 514 <kprintf>
     kprintf("   RAM  : 8 KB Data RAM   [0x1000_0000 - 0x1000_1FFF]\n");
-  fc:	00000537          	lui	a0,0x0
- 100:	7f050513          	addi	a0,a0,2032 # 7f0 <__modsi3+0x138>
- 104:	00000097          	auipc	ra,0x0
- 108:	1d8080e7          	jalr	472(ra) # 2dc <kprintf>
+ 304:	00001537          	lui	a0,0x1
+ 308:	a1850513          	addi	a0,a0,-1512 # a18 <__modsi3+0x134>
+ 30c:	00000097          	auipc	ra,0x0
+ 310:	208080e7          	jalr	520(ra) # 514 <kprintf>
     kprintf("   Baud : 115200 8N1\n");
- 10c:	00001537          	lui	a0,0x1
- 110:	82850513          	addi	a0,a0,-2008 # 828 <__modsi3+0x170>
- 114:	00000097          	auipc	ra,0x0
- 118:	1c8080e7          	jalr	456(ra) # 2dc <kprintf>
+ 314:	00001537          	lui	a0,0x1
+ 318:	a5050513          	addi	a0,a0,-1456 # a50 <__modsi3+0x16c>
+ 31c:	00000097          	auipc	ra,0x0
+ 320:	1f8080e7          	jalr	504(ra) # 514 <kprintf>
     kprintf("====================================================\n");
- 11c:	6ec40513          	addi	a0,s0,1772
- 120:	00000097          	auipc	ra,0x0
- 124:	1bc080e7          	jalr	444(ra) # 2dc <kprintf>
+ 324:	91440513          	addi	a0,s0,-1772
+ 328:	00000097          	auipc	ra,0x0
+ 32c:	1ec080e7          	jalr	492(ra) # 514 <kprintf>
     kprintf("Type any character into your serial terminal to echo...\n\n");
- 128:	00001537          	lui	a0,0x1
- 12c:	84050513          	addi	a0,a0,-1984 # 840 <__modsi3+0x188>
- 130:	00000097          	auipc	ra,0x0
- 134:	1ac080e7          	jalr	428(ra) # 2dc <kprintf>
+ 330:	00001537          	lui	a0,0x1
+ 334:	a6850513          	addi	a0,a0,-1432 # a68 <__modsi3+0x184>
+ 338:	00000097          	auipc	ra,0x0
+ 33c:	1dc080e7          	jalr	476(ra) # 514 <kprintf>
+
+    uint32_t char_count = 0;
+ 340:	00000493          	li	s1,0
+
             // Toggle LED0 on each received byte
             gpio_toggle_led(0);
 
             // Periodically print count
             if (c == '\r' || c == '\n') {
+ 344:	00d00993          	li	s3,13
                 kprintf("\n[Echo Total: %u characters received]\n", char_count);
- 138:	000017b7          	lui	a5,0x1
-    uint32_t char_count = 0;
- 13c:	00000493          	li	s1,0
-                kprintf("\n[Echo Total: %u characters received]\n", char_count);
- 140:	87c78913          	addi	s2,a5,-1924 # 87c <__modsi3+0x1c4>
+ 348:	00001937          	lui	s2,0x1
+            if (c == '\r' || c == '\n') {
+ 34c:	00a00a13          	li	s4,10
         if (uart_has_rx()) {
- 144:	00000097          	auipc	ra,0x0
- 148:	46c080e7          	jalr	1132(ra) # 5b0 <uart_has_rx>
- 14c:	fe050ce3          	beqz	a0,144 <main+0xe0>
+ 350:	00000097          	auipc	ra,0x0
+ 354:	48c080e7          	jalr	1164(ra) # 7dc <uart_has_rx>
+ 358:	fe050ce3          	beqz	a0,350 <main+0xec>
             char c = uart_getc();
- 150:	00000097          	auipc	ra,0x0
- 154:	43c080e7          	jalr	1084(ra) # 58c <uart_getc>
- 158:	00050413          	mv	s0,a0
+ 35c:	00000097          	auipc	ra,0x0
+ 360:	464080e7          	jalr	1124(ra) # 7c0 <uart_getc>
+ 364:	00050413          	mv	s0,a0
             uart_putc(c);
- 15c:	00000097          	auipc	ra,0x0
- 160:	3e8080e7          	jalr	1000(ra) # 544 <uart_putc>
+ 368:	00000097          	auipc	ra,0x0
+ 36c:	420080e7          	jalr	1056(ra) # 788 <uart_putc>
             gpio_toggle_led(0);
- 164:	00000513          	li	a0,0
- 168:	00000097          	auipc	ra,0x0
- 16c:	4a8080e7          	jalr	1192(ra) # 610 <gpio_toggle_led>
-            if (c == '\r' || c == '\n') {
- 170:	ff640793          	addi	a5,s0,-10
+ 370:	00000513          	li	a0,0
             char_count++;
- 174:	00148493          	addi	s1,s1,1
+ 374:	00148493          	addi	s1,s1,1
+            gpio_toggle_led(0);
+ 378:	00000097          	auipc	ra,0x0
+ 37c:	4c4080e7          	jalr	1220(ra) # 83c <gpio_toggle_led>
             if (c == '\r' || c == '\n') {
- 178:	00078663          	beqz	a5,184 <main+0x120>
- 17c:	ff340413          	addi	s0,s0,-13
- 180:	fc0412e3          	bnez	s0,144 <main+0xe0>
+ 380:	01340463          	beq	s0,s3,388 <main+0x124>
+ 384:	fd4416e3          	bne	s0,s4,350 <main+0xec>
                 kprintf("\n[Echo Total: %u characters received]\n", char_count);
- 184:	00048593          	mv	a1,s1
- 188:	00090513          	mv	a0,s2
- 18c:	00000097          	auipc	ra,0x0
- 190:	150080e7          	jalr	336(ra) # 2dc <kprintf>
- 194:	fb1ff06f          	j	144 <main+0xe0>
+ 388:	00048593          	mv	a1,s1
+ 38c:	aa490513          	addi	a0,s2,-1372 # aa4 <__modsi3+0x1c0>
+ 390:	00000097          	auipc	ra,0x0
+ 394:	184080e7          	jalr	388(ra) # 514 <kprintf>
+ 398:	fb9ff06f          	j	350 <main+0xec>
 
-00000198 <print_num>:
+0000039c <print_num>:
     }
     return len;
 }
 
 static void print_num(uint32_t val, uint32_t base, bool uppercase, bool is_signed)
 {
- 198:	fb010113          	addi	sp,sp,-80
- 19c:	04812423          	sw	s0,72(sp)
- 1a0:	03612823          	sw	s6,48(sp)
- 1a4:	04112623          	sw	ra,76(sp)
- 1a8:	04912223          	sw	s1,68(sp)
- 1ac:	05212023          	sw	s2,64(sp)
- 1b0:	03312e23          	sw	s3,60(sp)
- 1b4:	03412c23          	sw	s4,56(sp)
- 1b8:	03512a23          	sw	s5,52(sp)
- 1bc:	00050413          	mv	s0,a0
- 1c0:	00058b13          	mv	s6,a1
+ 39c:	fc010113          	addi	sp,sp,-64
+ 3a0:	02812c23          	sw	s0,56(sp)
+ 3a4:	02912a23          	sw	s1,52(sp)
+ 3a8:	03312623          	sw	s3,44(sp)
+ 3ac:	02112e23          	sw	ra,60(sp)
+ 3b0:	03212823          	sw	s2,48(sp)
+ 3b4:	03412423          	sw	s4,40(sp)
+ 3b8:	03512223          	sw	s5,36(sp)
+ 3bc:	03612023          	sw	s6,32(sp)
+ 3c0:	00050413          	mv	s0,a0
+ 3c4:	00058993          	mv	s3,a1
+ 3c8:	00060493          	mv	s1,a2
     char buf[32];
     int idx = 0;
 
     if (is_signed && ((int32_t)val < 0)) {
- 1c4:	0a055c63          	bgez	a0,27c <print_num+0xe4>
- 1c8:	0a068a63          	beqz	a3,27c <print_num+0xe4>
+ 3cc:	0a068863          	beqz	a3,47c <print_num+0xe0>
+ 3d0:	0a055663          	bgez	a0,47c <print_num+0xe0>
         uart_putc('-');
- 1cc:	02d00513          	li	a0,45
- 1d0:	00c12623          	sw	a2,12(sp)
- 1d4:	00000097          	auipc	ra,0x0
- 1d8:	370080e7          	jalr	880(ra) # 544 <uart_putc>
+ 3d4:	02d00513          	li	a0,45
+ 3d8:	00000097          	auipc	ra,0x0
+ 3dc:	3b0080e7          	jalr	944(ra) # 788 <uart_putc>
         val = (uint32_t)(-(int32_t)val);
- 1dc:	00c12603          	lw	a2,12(sp)
- 1e0:	40800433          	neg	s0,s0
+ 3e0:	40800433          	neg	s0,s0
     if (val == 0) {
         uart_putc('0');
         return;
     }
 
     const char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
- 1e4:	0c061663          	bnez	a2,2b0 <print_num+0x118>
- 1e8:	00001937          	lui	s2,0x1
- 1ec:	8a490913          	addi	s2,s2,-1884 # 8a4 <__modsi3+0x1ec>
+ 3e4:	0c049663          	bnez	s1,4b0 <print_num+0x114>
+ 3e8:	00001937          	lui	s2,0x1
+ 3ec:	ae090913          	addi	s2,s2,-1312 # ae0 <__modsi3+0x1fc>
 
     while (val > 0) {
- 1f0:	01010993          	addi	s3,sp,16
-{
- 1f4:	00000493          	li	s1,0
- 1f8:	00098a93          	mv	s5,s3
+ 3f0:	00010a13          	mv	s4,sp
+    int idx = 0;
+ 3f4:	00000493          	li	s1,0
+ 3f8:	000a0b13          	mv	s6,s4
         buf[idx++] = digits[val % base];
- 1fc:	000b0593          	mv	a1,s6
- 200:	00040513          	mv	a0,s0
- 204:	00000097          	auipc	ra,0x0
- 208:	480080e7          	jalr	1152(ra) # 684 <__umodsi3>
- 20c:	00a90533          	add	a0,s2,a0
- 210:	00054783          	lbu	a5,0(a0)
+ 3fc:	00098593          	mv	a1,s3
+ 400:	00040513          	mv	a0,s0
+ 404:	00000097          	auipc	ra,0x0
+ 408:	4ac080e7          	jalr	1196(ra) # 8b0 <__umodsi3>
+ 40c:	00a90533          	add	a0,s2,a0
+ 410:	00054783          	lbu	a5,0(a0)
         val /= base;
- 214:	000b0593          	mv	a1,s6
- 218:	00040513          	mv	a0,s0
+ 414:	00098593          	mv	a1,s3
+ 418:	00040513          	mv	a0,s0
         buf[idx++] = digits[val % base];
- 21c:	00f98023          	sb	a5,0(s3)
- 220:	00040a13          	mv	s4,s0
+ 41c:	00fa0023          	sb	a5,0(s4)
+ 420:	00040a93          	mv	s5,s0
         val /= base;
- 224:	00000097          	auipc	ra,0x0
- 228:	418080e7          	jalr	1048(ra) # 63c <__hidden___udivsi3>
+ 424:	00000097          	auipc	ra,0x0
+ 428:	444080e7          	jalr	1092(ra) # 868 <__udivsi3>
         buf[idx++] = digits[val % base];
- 22c:	00148493          	addi	s1,s1,1
+ 42c:	00148493          	addi	s1,s1,1
         val /= base;
- 230:	00050413          	mv	s0,a0
+ 430:	00050413          	mv	s0,a0
     while (val > 0) {
- 234:	00198993          	addi	s3,s3,1
- 238:	fd6a72e3          	bgeu	s4,s6,1fc <print_num+0x64>
+ 434:	001a0a13          	addi	s4,s4,1
+ 438:	fd3af2e3          	bgeu	s5,s3,3fc <print_num+0x60>
     }
 
     while (idx > 0) {
         uart_putc(buf[--idx]);
- 23c:	fff48493          	addi	s1,s1,-1
- 240:	009a87b3          	add	a5,s5,s1
- 244:	0007c503          	lbu	a0,0(a5)
- 248:	00000097          	auipc	ra,0x0
- 24c:	2fc080e7          	jalr	764(ra) # 544 <uart_putc>
+ 43c:	fff48493          	addi	s1,s1,-1
+ 440:	009b07b3          	add	a5,s6,s1
+ 444:	0007c503          	lbu	a0,0(a5)
+ 448:	00000097          	auipc	ra,0x0
+ 44c:	340080e7          	jalr	832(ra) # 788 <uart_putc>
     while (idx > 0) {
- 250:	fe0496e3          	bnez	s1,23c <print_num+0xa4>
+ 450:	fe0496e3          	bnez	s1,43c <print_num+0xa0>
     }
 }
- 254:	04c12083          	lw	ra,76(sp)
- 258:	04812403          	lw	s0,72(sp)
- 25c:	04412483          	lw	s1,68(sp)
- 260:	04012903          	lw	s2,64(sp)
- 264:	03c12983          	lw	s3,60(sp)
- 268:	03812a03          	lw	s4,56(sp)
- 26c:	03412a83          	lw	s5,52(sp)
- 270:	03012b03          	lw	s6,48(sp)
- 274:	05010113          	addi	sp,sp,80
- 278:	00008067          	ret
+ 454:	03c12083          	lw	ra,60(sp)
+ 458:	03812403          	lw	s0,56(sp)
+ 45c:	03412483          	lw	s1,52(sp)
+ 460:	03012903          	lw	s2,48(sp)
+ 464:	02c12983          	lw	s3,44(sp)
+ 468:	02812a03          	lw	s4,40(sp)
+ 46c:	02412a83          	lw	s5,36(sp)
+ 470:	02012b03          	lw	s6,32(sp)
+ 474:	04010113          	addi	sp,sp,64
+ 478:	00008067          	ret
     if (val == 0) {
- 27c:	f60414e3          	bnez	s0,1e4 <print_num+0x4c>
+ 47c:	f60414e3          	bnez	s0,3e4 <print_num+0x48>
 }
- 280:	04812403          	lw	s0,72(sp)
- 284:	04c12083          	lw	ra,76(sp)
- 288:	04412483          	lw	s1,68(sp)
- 28c:	04012903          	lw	s2,64(sp)
- 290:	03c12983          	lw	s3,60(sp)
- 294:	03812a03          	lw	s4,56(sp)
- 298:	03412a83          	lw	s5,52(sp)
- 29c:	03012b03          	lw	s6,48(sp)
+ 480:	03812403          	lw	s0,56(sp)
+ 484:	03c12083          	lw	ra,60(sp)
+ 488:	03412483          	lw	s1,52(sp)
+ 48c:	03012903          	lw	s2,48(sp)
+ 490:	02c12983          	lw	s3,44(sp)
+ 494:	02812a03          	lw	s4,40(sp)
+ 498:	02412a83          	lw	s5,36(sp)
+ 49c:	02012b03          	lw	s6,32(sp)
         uart_putc('0');
- 2a0:	03000513          	li	a0,48
+ 4a0:	03000513          	li	a0,48
 }
- 2a4:	05010113          	addi	sp,sp,80
+ 4a4:	04010113          	addi	sp,sp,64
         uart_putc('0');
- 2a8:	00000317          	auipc	t1,0x0
- 2ac:	29c30067          	jr	668(t1) # 544 <uart_putc>
+ 4a8:	00000317          	auipc	t1,0x0
+ 4ac:	2e030067          	jr	736(t1) # 788 <uart_putc>
     const char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
- 2b0:	00001937          	lui	s2,0x1
- 2b4:	8b890913          	addi	s2,s2,-1864 # 8b8 <__modsi3+0x200>
- 2b8:	f39ff06f          	j	1f0 <print_num+0x58>
+ 4b0:	00001937          	lui	s2,0x1
+ 4b4:	acc90913          	addi	s2,s2,-1332 # acc <__modsi3+0x1e8>
+ 4b8:	f39ff06f          	j	3f0 <print_num+0x54>
 
-000002bc <delay_ms>:
-    while (ms--) {
- 2bc:	00051463          	bnez	a0,2c4 <delay_ms+0x8>
+000004bc <delay_cycles>:
+    if (count == 0) return;
+ 4bc:	00050663          	beqz	a0,4c8 <delay_cycles+0xc>
+    __asm__ volatile (
+ 4c0:	fff50513          	addi	a0,a0,-1
+ 4c4:	fe051ee3          	bnez	a0,4c0 <delay_cycles+0x4>
 }
- 2c0:	00008067          	ret
-    __asm__ volatile (
- 2c4:	00003737          	lui	a4,0x3
-    while (ms--) {
- 2c8:	fff50513          	addi	a0,a0,-1
-    __asm__ volatile (
- 2cc:	0d470713          	addi	a4,a4,212 # 30d4 <_sidata+0x27fc>
- 2d0:	fff70713          	addi	a4,a4,-1
- 2d4:	fe071ee3          	bnez	a4,2d0 <delay_ms+0x14>
- 2d8:	fe5ff06f          	j	2bc <delay_ms>
+ 4c8:	00008067          	ret
 
-000002dc <kprintf>:
+000004cc <delay_ms>:
+{
+ 4cc:	ff010113          	addi	sp,sp,-16
+ 4d0:	00912223          	sw	s1,4(sp)
+        delay_cycles(12500);
+ 4d4:	000034b7          	lui	s1,0x3
+{
+ 4d8:	00812423          	sw	s0,8(sp)
+ 4dc:	00112623          	sw	ra,12(sp)
+ 4e0:	00050413          	mv	s0,a0
+        delay_cycles(12500);
+ 4e4:	0d448493          	addi	s1,s1,212 # 30d4 <_sidata+0x25d4>
+    while (ms--) {
+ 4e8:	00041c63          	bnez	s0,500 <delay_ms+0x34>
+}
+ 4ec:	00c12083          	lw	ra,12(sp)
+ 4f0:	00812403          	lw	s0,8(sp)
+ 4f4:	00412483          	lw	s1,4(sp)
+ 4f8:	01010113          	addi	sp,sp,16
+ 4fc:	00008067          	ret
+        delay_cycles(12500);
+ 500:	00048513          	mv	a0,s1
+ 504:	00000097          	auipc	ra,0x0
+ 508:	fb8080e7          	jalr	-72(ra) # 4bc <delay_cycles>
+ 50c:	fff40413          	addi	s0,s0,-1
+ 510:	fd9ff06f          	j	4e8 <delay_ms+0x1c>
+
+00000514 <kprintf>:
 
 int kprintf(const char *fmt, ...)
 {
- 2dc:	fa010113          	addi	sp,sp,-96
- 2e0:	02812c23          	sw	s0,56(sp)
- 2e4:	02112e23          	sw	ra,60(sp)
- 2e8:	02912a23          	sw	s1,52(sp)
- 2ec:	03212823          	sw	s2,48(sp)
- 2f0:	03312623          	sw	s3,44(sp)
- 2f4:	03412423          	sw	s4,40(sp)
- 2f8:	03512223          	sw	s5,36(sp)
- 2fc:	03612023          	sw	s6,32(sp)
- 300:	01712e23          	sw	s7,28(sp)
- 304:	01812c23          	sw	s8,24(sp)
- 308:	01912a23          	sw	s9,20(sp)
- 30c:	04b12223          	sw	a1,68(sp)
- 310:	04c12423          	sw	a2,72(sp)
- 314:	04d12623          	sw	a3,76(sp)
- 318:	04e12823          	sw	a4,80(sp)
- 31c:	04f12a23          	sw	a5,84(sp)
- 320:	05012c23          	sw	a6,88(sp)
- 324:	05112e23          	sw	a7,92(sp)
+ 514:	fa010113          	addi	sp,sp,-96
+ 518:	02812c23          	sw	s0,56(sp)
+ 51c:	02112e23          	sw	ra,60(sp)
+ 520:	02912a23          	sw	s1,52(sp)
+ 524:	03212823          	sw	s2,48(sp)
+ 528:	03312623          	sw	s3,44(sp)
+ 52c:	03412423          	sw	s4,40(sp)
+ 530:	03512223          	sw	s5,36(sp)
+ 534:	03612023          	sw	s6,32(sp)
+ 538:	01712e23          	sw	s7,28(sp)
+ 53c:	01812c23          	sw	s8,24(sp)
+ 540:	01912a23          	sw	s9,20(sp)
+ 544:	01a12823          	sw	s10,16(sp)
+ 548:	04b12223          	sw	a1,68(sp)
+ 54c:	04c12423          	sw	a2,72(sp)
+ 550:	04d12623          	sw	a3,76(sp)
+ 554:	04e12823          	sw	a4,80(sp)
+ 558:	04f12a23          	sw	a5,84(sp)
+ 55c:	05012c23          	sw	a6,88(sp)
+ 560:	05112e23          	sw	a7,92(sp)
     if (!fmt) return 0;
- 328:	00000413          	li	s0,0
- 32c:	02050a63          	beqz	a0,360 <kprintf+0x84>
+ 564:	00000413          	li	s0,0
+ 568:	02050e63          	beqz	a0,5a4 <kprintf+0x90>
     va_list args;
     va_start(args, fmt);
- 330:	04410793          	addi	a5,sp,68
- 334:	00050913          	mv	s2,a0
- 338:	00f12623          	sw	a5,12(sp)
-
+ 56c:	04410793          	addi	a5,sp,68
+                count++;
+                break;
+            }
+            case 's': {
+                const char *s = va_arg(args, const char *);
+                if (!s) s = "(null)";
+ 570:	000019b7          	lui	s3,0x1
+ 574:	00050913          	mv	s2,a0
+    va_start(args, fmt);
+ 578:	00f12623          	sw	a5,12(sp)
     int count = 0;
- 33c:	00000413          	li	s0,0
-    for (const char *p = fmt; *p != '\0'; p++) {
+ 57c:	00000413          	li	s0,0
         if (*p != '%') {
- 340:	02500993          	li	s3,37
-            count++;
-            continue;
-        }
-
-        p++; // Skip '%'
+ 580:	02500a13          	li	s4,37
         switch (*p) {
- 344:	06900a13          	li	s4,105
- 348:	07500a93          	li	s5,117
- 34c:	07000c13          	li	s8,112
- 350:	05800b13          	li	s6,88
- 354:	06300c93          	li	s9,99
+ 584:	06900a93          	li	s5,105
+ 588:	07500b13          	li	s6,117
+ 58c:	07800c13          	li	s8,120
+ 590:	07000c93          	li	s9,112
+                count++;
+                break;
+            }
+            case 'p': {
+                uint32_t ptr = va_arg(args, uint32_t);
+                uart_puts("0x");
+ 594:	00001d37          	lui	s10,0x1
+                if (!s) s = "(null)";
+ 598:	af498993          	addi	s3,s3,-1292 # af4 <__modsi3+0x210>
     for (const char *p = fmt; *p != '\0'; p++) {
- 358:	00094503          	lbu	a0,0(s2)
- 35c:	02051e63          	bnez	a0,398 <kprintf+0xbc>
+ 59c:	00094503          	lbu	a0,0(s2)
+ 5a0:	04051063          	bnez	a0,5e0 <kprintf+0xcc>
         }
     }
 
     va_end(args);
     return count;
 }
- 360:	03c12083          	lw	ra,60(sp)
- 364:	00040513          	mv	a0,s0
- 368:	03812403          	lw	s0,56(sp)
- 36c:	03412483          	lw	s1,52(sp)
- 370:	03012903          	lw	s2,48(sp)
- 374:	02c12983          	lw	s3,44(sp)
- 378:	02812a03          	lw	s4,40(sp)
- 37c:	02412a83          	lw	s5,36(sp)
- 380:	02012b03          	lw	s6,32(sp)
- 384:	01c12b83          	lw	s7,28(sp)
- 388:	01812c03          	lw	s8,24(sp)
- 38c:	01412c83          	lw	s9,20(sp)
- 390:	06010113          	addi	sp,sp,96
- 394:	00008067          	ret
+ 5a4:	03c12083          	lw	ra,60(sp)
+ 5a8:	00040513          	mv	a0,s0
+ 5ac:	03812403          	lw	s0,56(sp)
+ 5b0:	03412483          	lw	s1,52(sp)
+ 5b4:	03012903          	lw	s2,48(sp)
+ 5b8:	02c12983          	lw	s3,44(sp)
+ 5bc:	02812a03          	lw	s4,40(sp)
+ 5c0:	02412a83          	lw	s5,36(sp)
+ 5c4:	02012b03          	lw	s6,32(sp)
+ 5c8:	01c12b83          	lw	s7,28(sp)
+ 5cc:	01812c03          	lw	s8,24(sp)
+ 5d0:	01412c83          	lw	s9,20(sp)
+ 5d4:	01012d03          	lw	s10,16(sp)
+ 5d8:	06010113          	addi	sp,sp,96
+ 5dc:	00008067          	ret
         p++; // Skip '%'
- 398:	00190b93          	addi	s7,s2,1
+ 5e0:	00190b93          	addi	s7,s2,1
         if (*p != '%') {
- 39c:	03350063          	beq	a0,s3,3bc <kprintf+0xe0>
+ 5e4:	03450063          	beq	a0,s4,604 <kprintf+0xf0>
             uart_putc(*p);
- 3a0:	00000097          	auipc	ra,0x0
- 3a4:	1a4080e7          	jalr	420(ra) # 544 <uart_putc>
+ 5e8:	00000097          	auipc	ra,0x0
+ 5ec:	1a0080e7          	jalr	416(ra) # 788 <uart_putc>
             count++;
- 3a8:	00140493          	addi	s1,s0,1
+ 5f0:	00140493          	addi	s1,s0,1
             continue;
- 3ac:	00090b93          	mv	s7,s2
+ 5f4:	00090b93          	mv	s7,s2
     for (const char *p = fmt; *p != '\0'; p++) {
- 3b0:	001b8913          	addi	s2,s7,1
- 3b4:	00048413          	mv	s0,s1
- 3b8:	fa1ff06f          	j	358 <kprintf+0x7c>
+ 5f8:	001b8913          	addi	s2,s7,1
+ 5fc:	00048413          	mv	s0,s1
+ 600:	f9dff06f          	j	59c <kprintf+0x88>
         switch (*p) {
- 3bc:	00194783          	lbu	a5,1(s2)
- 3c0:	05478063          	beq	a5,s4,400 <kprintf+0x124>
- 3c4:	06fa6463          	bltu	s4,a5,42c <kprintf+0x150>
- 3c8:	11678663          	beq	a5,s6,4d4 <kprintf+0x1f8>
- 3cc:	02fb6463          	bltu	s6,a5,3f4 <kprintf+0x118>
+ 604:	00194783          	lbu	a5,1(s2)
+ 608:	05578463          	beq	a5,s5,650 <kprintf+0x13c>
+ 60c:	06fae863          	bltu	s5,a5,67c <kprintf+0x168>
+ 610:	05800713          	li	a4,88
+ 614:	10e78463          	beq	a5,a4,71c <kprintf+0x208>
+ 618:	02f76463          	bltu	a4,a5,640 <kprintf+0x12c>
                 uart_putc('%');
- 3d0:	00098513          	mv	a0,s3
+ 61c:	02500513          	li	a0,37
         switch (*p) {
- 3d4:	0f378063          	beq	a5,s3,4b4 <kprintf+0x1d8>
+ 620:	0d478e63          	beq	a5,s4,6fc <kprintf+0x1e8>
                 uart_putc('%');
- 3d8:	02500513          	li	a0,37
- 3dc:	00000097          	auipc	ra,0x0
- 3e0:	168080e7          	jalr	360(ra) # 544 <uart_putc>
+ 624:	02500513          	li	a0,37
+ 628:	00000097          	auipc	ra,0x0
+ 62c:	160080e7          	jalr	352(ra) # 788 <uart_putc>
                 uart_putc(*p);
- 3e4:	00194503          	lbu	a0,1(s2)
- 3e8:	00000097          	auipc	ra,0x0
- 3ec:	15c080e7          	jalr	348(ra) # 544 <uart_putc>
- 3f0:	1340006f          	j	524 <kprintf+0x248>
+ 630:	00194503          	lbu	a0,1(s2)
+ 634:	00000097          	auipc	ra,0x0
+ 638:	154080e7          	jalr	340(ra) # 788 <uart_putc>
+ 63c:	12c0006f          	j	768 <kprintf+0x254>
         switch (*p) {
- 3f4:	0b978863          	beq	a5,s9,4a4 <kprintf+0x1c8>
- 3f8:	06400713          	li	a4,100
- 3fc:	fce79ee3          	bne	a5,a4,3d8 <kprintf+0xfc>
+ 640:	06300713          	li	a4,99
+ 644:	0ae78463          	beq	a5,a4,6ec <kprintf+0x1d8>
+ 648:	06400713          	li	a4,100
+ 64c:	fce79ce3          	bne	a5,a4,624 <kprintf+0x110>
                 int32_t d = va_arg(args, int32_t);
- 400:	00c12783          	lw	a5,12(sp)
+ 650:	00c12783          	lw	a5,12(sp)
                 print_num((uint32_t)d, 10, false, true);
- 404:	00100693          	li	a3,1
+ 654:	00100693          	li	a3,1
                 int32_t d = va_arg(args, int32_t);
- 408:	00478713          	addi	a4,a5,4
- 40c:	00e12623          	sw	a4,12(sp)
+ 658:	00478713          	addi	a4,a5,4
+ 65c:	00e12623          	sw	a4,12(sp)
                 print_num((uint32_t)d, 10, false, true);
- 410:	00000613          	li	a2,0
- 414:	00a00593          	li	a1,10
- 418:	0007a503          	lw	a0,0(a5)
- 41c:	00000097          	auipc	ra,0x0
- 420:	d7c080e7          	jalr	-644(ra) # 198 <print_num>
+ 660:	00000613          	li	a2,0
+ 664:	00a00593          	li	a1,10
+ 668:	0007a503          	lw	a0,0(a5)
+ 66c:	00000097          	auipc	ra,0x0
+ 670:	d30080e7          	jalr	-720(ra) # 39c <print_num>
                 count++;
- 424:	00140493          	addi	s1,s0,1
+ 674:	00140493          	addi	s1,s0,1
                 break;
- 428:	f89ff06f          	j	3b0 <kprintf+0xd4>
+ 678:	f81ff06f          	j	5f8 <kprintf+0xe4>
         switch (*p) {
- 42c:	09578a63          	beq	a5,s5,4c0 <kprintf+0x1e4>
- 430:	04fae863          	bltu	s5,a5,480 <kprintf+0x1a4>
- 434:	0b878c63          	beq	a5,s8,4ec <kprintf+0x210>
- 438:	07300713          	li	a4,115
- 43c:	f8e79ee3          	bne	a5,a4,3d8 <kprintf+0xfc>
+ 67c:	09678663          	beq	a5,s6,708 <kprintf+0x1f4>
+ 680:	04fb6663          	bltu	s6,a5,6cc <kprintf+0x1b8>
+ 684:	0b978863          	beq	a5,s9,734 <kprintf+0x220>
+ 688:	07300713          	li	a4,115
+ 68c:	f8e79ce3          	bne	a5,a4,624 <kprintf+0x110>
                 const char *s = va_arg(args, const char *);
- 440:	00c12783          	lw	a5,12(sp)
- 444:	0007a903          	lw	s2,0(a5)
- 448:	00478713          	addi	a4,a5,4
- 44c:	00e12623          	sw	a4,12(sp)
+ 690:	00c12783          	lw	a5,12(sp)
+ 694:	0007a903          	lw	s2,0(a5)
+ 698:	00478713          	addi	a4,a5,4
+ 69c:	00e12623          	sw	a4,12(sp)
                 if (!s) s = "(null)";
- 450:	00091663          	bnez	s2,45c <kprintf+0x180>
- 454:	00001937          	lui	s2,0x1
- 458:	8cc90913          	addi	s2,s2,-1844 # 8cc <__modsi3+0x214>
- 45c:	00040493          	mv	s1,s0
+ 6a0:	00091463          	bnez	s2,6a8 <kprintf+0x194>
+ 6a4:	00098913          	mv	s2,s3
+ 6a8:	00040493          	mv	s1,s0
                 while (*s) {
- 460:	408487b3          	sub	a5,s1,s0
- 464:	00f907b3          	add	a5,s2,a5
- 468:	0007c503          	lbu	a0,0(a5)
- 46c:	f40502e3          	beqz	a0,3b0 <kprintf+0xd4>
+ 6ac:	408487b3          	sub	a5,s1,s0
+ 6b0:	00f907b3          	add	a5,s2,a5
+ 6b4:	0007c503          	lbu	a0,0(a5)
+ 6b8:	f40500e3          	beqz	a0,5f8 <kprintf+0xe4>
                     uart_putc(*s++);
- 470:	00000097          	auipc	ra,0x0
- 474:	0d4080e7          	jalr	212(ra) # 544 <uart_putc>
+ 6bc:	00000097          	auipc	ra,0x0
+ 6c0:	0cc080e7          	jalr	204(ra) # 788 <uart_putc>
                     count++;
- 478:	00148493          	addi	s1,s1,1
- 47c:	fe5ff06f          	j	460 <kprintf+0x184>
+ 6c4:	00148493          	addi	s1,s1,1
+ 6c8:	fe5ff06f          	j	6ac <kprintf+0x198>
         switch (*p) {
- 480:	07800713          	li	a4,120
- 484:	f4e79ae3          	bne	a5,a4,3d8 <kprintf+0xfc>
+ 6cc:	f5879ce3          	bne	a5,s8,624 <kprintf+0x110>
                 uint32_t x = va_arg(args, uint32_t);
- 488:	00c12783          	lw	a5,12(sp)
+ 6d0:	00c12783          	lw	a5,12(sp)
                 print_num(x, 16, false, false);
- 48c:	00000693          	li	a3,0
- 490:	00000613          	li	a2,0
+ 6d4:	00000693          	li	a3,0
+ 6d8:	00000613          	li	a2,0
                 uint32_t x = va_arg(args, uint32_t);
- 494:	00478713          	addi	a4,a5,4
- 498:	00e12623          	sw	a4,12(sp)
+ 6dc:	00478713          	addi	a4,a5,4
+ 6e0:	00e12623          	sw	a4,12(sp)
                 print_num(x, 16, true, false);
- 49c:	01000593          	li	a1,16
- 4a0:	f79ff06f          	j	418 <kprintf+0x13c>
+ 6e4:	01000593          	li	a1,16
+ 6e8:	f81ff06f          	j	668 <kprintf+0x154>
                 char c = (char)va_arg(args, int);
- 4a4:	00c12783          	lw	a5,12(sp)
+ 6ec:	00c12783          	lw	a5,12(sp)
                 uart_putc(c);
- 4a8:	0007c503          	lbu	a0,0(a5)
+ 6f0:	0007c503          	lbu	a0,0(a5)
                 char c = (char)va_arg(args, int);
- 4ac:	00478713          	addi	a4,a5,4
- 4b0:	00e12623          	sw	a4,12(sp)
+ 6f4:	00478713          	addi	a4,a5,4
+ 6f8:	00e12623          	sw	a4,12(sp)
                 uart_putc('%');
- 4b4:	00000097          	auipc	ra,0x0
- 4b8:	090080e7          	jalr	144(ra) # 544 <uart_putc>
+ 6fc:	00000097          	auipc	ra,0x0
+ 700:	08c080e7          	jalr	140(ra) # 788 <uart_putc>
                 count++;
- 4bc:	f69ff06f          	j	424 <kprintf+0x148>
+ 704:	f71ff06f          	j	674 <kprintf+0x160>
                 uint32_t u = va_arg(args, uint32_t);
- 4c0:	00c12783          	lw	a5,12(sp)
+ 708:	00c12783          	lw	a5,12(sp)
                 print_num(u, 10, false, false);
- 4c4:	00000693          	li	a3,0
+ 70c:	00000693          	li	a3,0
                 uint32_t u = va_arg(args, uint32_t);
- 4c8:	00478713          	addi	a4,a5,4
- 4cc:	00e12623          	sw	a4,12(sp)
+ 710:	00478713          	addi	a4,a5,4
+ 714:	00e12623          	sw	a4,12(sp)
                 print_num(u, 10, false, false);
- 4d0:	f41ff06f          	j	410 <kprintf+0x134>
+ 718:	f49ff06f          	j	660 <kprintf+0x14c>
                 uint32_t x = va_arg(args, uint32_t);
- 4d4:	00c12783          	lw	a5,12(sp)
+ 71c:	00c12783          	lw	a5,12(sp)
                 print_num(x, 16, true, false);
- 4d8:	00000693          	li	a3,0
- 4dc:	00100613          	li	a2,1
+ 720:	00000693          	li	a3,0
+ 724:	00100613          	li	a2,1
                 uint32_t x = va_arg(args, uint32_t);
- 4e0:	00478713          	addi	a4,a5,4
- 4e4:	00e12623          	sw	a4,12(sp)
+ 728:	00478713          	addi	a4,a5,4
+ 72c:	00e12623          	sw	a4,12(sp)
                 print_num(x, 16, true, false);
- 4e8:	fb5ff06f          	j	49c <kprintf+0x1c0>
+ 730:	fb5ff06f          	j	6e4 <kprintf+0x1d0>
                 uint32_t ptr = va_arg(args, uint32_t);
- 4ec:	00c12783          	lw	a5,12(sp)
+ 734:	00c12783          	lw	a5,12(sp)
                 uart_puts("0x");
- 4f0:	00001537          	lui	a0,0x1
- 4f4:	8d450513          	addi	a0,a0,-1836 # 8d4 <__modsi3+0x21c>
+ 738:	afcd0513          	addi	a0,s10,-1284 # afc <__modsi3+0x218>
                 uint32_t ptr = va_arg(args, uint32_t);
- 4f8:	0007a483          	lw	s1,0(a5)
- 4fc:	00478713          	addi	a4,a5,4
- 500:	00e12623          	sw	a4,12(sp)
+ 73c:	0007a483          	lw	s1,0(a5)
+ 740:	00478713          	addi	a4,a5,4
+ 744:	00e12623          	sw	a4,12(sp)
                 uart_puts("0x");
- 504:	00000097          	auipc	ra,0x0
- 508:	0c0080e7          	jalr	192(ra) # 5c4 <uart_puts>
+ 748:	00000097          	auipc	ra,0x0
+ 74c:	0a8080e7          	jalr	168(ra) # 7f0 <uart_puts>
                 print_num(ptr, 16, false, false);
- 50c:	00000693          	li	a3,0
- 510:	00000613          	li	a2,0
- 514:	01000593          	li	a1,16
- 518:	00048513          	mv	a0,s1
- 51c:	00000097          	auipc	ra,0x0
- 520:	c7c080e7          	jalr	-900(ra) # 198 <print_num>
+ 750:	00000693          	li	a3,0
+ 754:	00000613          	li	a2,0
+ 758:	01000593          	li	a1,16
+ 75c:	00048513          	mv	a0,s1
+ 760:	00000097          	auipc	ra,0x0
+ 764:	c3c080e7          	jalr	-964(ra) # 39c <print_num>
                 count += 2;
- 524:	00240493          	addi	s1,s0,2
+ 768:	00240493          	addi	s1,s0,2
                 break;
- 528:	e89ff06f          	j	3b0 <kprintf+0xd4>
+ 76c:	e8dff06f          	j	5f8 <kprintf+0xe4>
 
-0000052c <uart_init>:
+00000770 <uart_init>:
 #include "uart.h"
 
 void uart_init(uint8_t baud_code)
 {
     UART_REG_BAUD = (uint32_t)(baud_code & 0x07);
- 52c:	200007b7          	lui	a5,0x20000
- 530:	00757513          	andi	a0,a0,7
- 534:	00a7a423          	sw	a0,8(a5) # 20000008 <_stack_top+0xfffe008>
+ 770:	200007b7          	lui	a5,0x20000
+ 774:	00757513          	andi	a0,a0,7
+ 778:	00a7a423          	sw	a0,8(a5) # 20000008 <_stack_top+0xfffe008>
     UART_REG_STATUS_CLEAR = 0x01; // Clear any pending status
- 538:	00100713          	li	a4,1
- 53c:	00e7a623          	sw	a4,12(a5)
+ 77c:	00100713          	li	a4,1
+ 780:	00e7a623          	sw	a4,12(a5)
 }
- 540:	00008067          	ret
+ 784:	00008067          	ret
 
-00000544 <uart_putc>:
+00000788 <uart_putc>:
 
 void uart_putc(char c)
 {
     // Auto-convert LF to CRLF for standard serial terminals
     if (c == '\n') {
- 544:	00a00793          	li	a5,10
- 548:	02f51263          	bne	a0,a5,56c <uart_putc+0x28>
-        while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
- 54c:	20000737          	lui	a4,0x20000
- 550:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
- 554:	00072783          	lw	a5,0(a4)
- 558:	0017f793          	andi	a5,a5,1
- 55c:	fe079ce3          	bnez	a5,554 <uart_putc+0x10>
+ 788:	00a00793          	li	a5,10
+ 78c:	00f51e63          	bne	a0,a5,7a8 <uart_putc+0x20>
+        while (UART_REG_STATUS & UART_STATUS_TX_FULL)
+ 790:	20000737          	lui	a4,0x20000
+ 794:	00472783          	lw	a5,4(a4) # 20000004 <_stack_top+0xfffe004>
+ 798:	0087f793          	andi	a5,a5,8
+ 79c:	fe079ce3          	bnez	a5,794 <uart_putc+0xc>
             ;
         UART_REG_DATA = (uint32_t)'\r';
- 560:	200007b7          	lui	a5,0x20000
- 564:	00d00713          	li	a4,13
- 568:	00e7a023          	sw	a4,0(a5) # 20000000 <_stack_top+0xfffe000>
+ 7a0:	00d00793          	li	a5,13
+ 7a4:	00f72023          	sw	a5,0(a4)
     }
 
-    while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
- 56c:	20000737          	lui	a4,0x20000
- 570:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
- 574:	00072783          	lw	a5,0(a4)
- 578:	0017f793          	andi	a5,a5,1
- 57c:	fe079ce3          	bnez	a5,574 <uart_putc+0x30>
+    while (UART_REG_STATUS & UART_STATUS_TX_FULL)
+ 7a8:	20000737          	lui	a4,0x20000
+ 7ac:	00472783          	lw	a5,4(a4) # 20000004 <_stack_top+0xfffe004>
+ 7b0:	0087f793          	andi	a5,a5,8
+ 7b4:	fe079ce3          	bnez	a5,7ac <uart_putc+0x24>
         ;
     UART_REG_DATA = (uint32_t)(uint8_t)c;
- 580:	200007b7          	lui	a5,0x20000
- 584:	00a7a023          	sw	a0,0(a5) # 20000000 <_stack_top+0xfffe000>
+ 7b8:	00a72023          	sw	a0,0(a4)
 }
- 588:	00008067          	ret
+ 7bc:	00008067          	ret
 
-0000058c <uart_getc>:
+000007c0 <uart_getc>:
 
 char uart_getc(void)
 {
     while (!(UART_REG_STATUS & UART_STATUS_RX_VALID))
- 58c:	20000737          	lui	a4,0x20000
- 590:	00470713          	addi	a4,a4,4 # 20000004 <_stack_top+0xfffe004>
- 594:	00072783          	lw	a5,0(a4)
- 598:	0027f793          	andi	a5,a5,2
- 59c:	fe078ce3          	beqz	a5,594 <uart_getc+0x8>
+ 7c0:	20000737          	lui	a4,0x20000
+ 7c4:	00472783          	lw	a5,4(a4) # 20000004 <_stack_top+0xfffe004>
+ 7c8:	0027f793          	andi	a5,a5,2
+ 7cc:	fe078ce3          	beqz	a5,7c4 <uart_getc+0x4>
         ;
     return (char)(UART_REG_DATA & 0xFF);
- 5a0:	200007b7          	lui	a5,0x20000
- 5a4:	0007a503          	lw	a0,0(a5) # 20000000 <_stack_top+0xfffe000>
+ 7d0:	00072503          	lw	a0,0(a4)
 }
- 5a8:	0ff57513          	zext.b	a0,a0
- 5ac:	00008067          	ret
+ 7d4:	0ff57513          	andi	a0,a0,255
+ 7d8:	00008067          	ret
 
-000005b0 <uart_has_rx>:
+000007dc <uart_has_rx>:
 
 bool uart_has_rx(void)
 {
     return (UART_REG_STATUS & UART_STATUS_RX_VALID) != 0;
- 5b0:	200007b7          	lui	a5,0x20000
- 5b4:	0047a503          	lw	a0,4(a5) # 20000004 <_stack_top+0xfffe004>
- 5b8:	00155513          	srli	a0,a0,0x1
+ 7dc:	200007b7          	lui	a5,0x20000
+ 7e0:	0047a503          	lw	a0,4(a5) # 20000004 <_stack_top+0xfffe004>
+ 7e4:	00155513          	srli	a0,a0,0x1
 }
- 5bc:	00157513          	andi	a0,a0,1
- 5c0:	00008067          	ret
+ 7e8:	00157513          	andi	a0,a0,1
+ 7ec:	00008067          	ret
 
-000005c4 <uart_puts>:
+000007f0 <uart_puts>:
 
 void uart_puts(const char *str)
 {
     if (!str) return;
- 5c4:	02051663          	bnez	a0,5f0 <uart_puts+0x2c>
- 5c8:	00008067          	ret
+ 7f0:	02051663          	bnez	a0,81c <uart_puts+0x2c>
+ 7f4:	00008067          	ret
     while (*str) {
         uart_putc(*str++);
- 5cc:	00140413          	addi	s0,s0,1
- 5d0:	00000097          	auipc	ra,0x0
- 5d4:	f74080e7          	jalr	-140(ra) # 544 <uart_putc>
+ 7f8:	00140413          	addi	s0,s0,1
+ 7fc:	00000097          	auipc	ra,0x0
+ 800:	f8c080e7          	jalr	-116(ra) # 788 <uart_putc>
     while (*str) {
- 5d8:	00044503          	lbu	a0,0(s0)
- 5dc:	fe0518e3          	bnez	a0,5cc <uart_puts+0x8>
+ 804:	00044503          	lbu	a0,0(s0)
+ 808:	fe0518e3          	bnez	a0,7f8 <uart_puts+0x8>
     }
 }
- 5e0:	00c12083          	lw	ra,12(sp)
- 5e4:	00812403          	lw	s0,8(sp)
- 5e8:	01010113          	addi	sp,sp,16
- 5ec:	00008067          	ret
+ 80c:	00c12083          	lw	ra,12(sp)
+ 810:	00812403          	lw	s0,8(sp)
+ 814:	01010113          	addi	sp,sp,16
+ 818:	00008067          	ret
 {
- 5f0:	ff010113          	addi	sp,sp,-16
- 5f4:	00812423          	sw	s0,8(sp)
- 5f8:	00112623          	sw	ra,12(sp)
- 5fc:	00050413          	mv	s0,a0
- 600:	fd9ff06f          	j	5d8 <uart_puts+0x14>
+ 81c:	ff010113          	addi	sp,sp,-16
+ 820:	00812423          	sw	s0,8(sp)
+ 824:	00112623          	sw	ra,12(sp)
+ 828:	00050413          	mv	s0,a0
+ 82c:	fd9ff06f          	j	804 <uart_puts+0x14>
 
-00000604 <gpio_set_leds>:
+00000830 <gpio_set_leds>:
 #include "gpio.h"
 
 void gpio_set_leds(uint16_t mask)
 {
     GPIO_REG_DATA_OUT = (uint32_t)mask;
- 604:	300007b7          	lui	a5,0x30000
- 608:	00a7a023          	sw	a0,0(a5) # 30000000 <_stack_top+0x1fffe000>
+ 830:	300007b7          	lui	a5,0x30000
+ 834:	00a7a023          	sw	a0,0(a5) # 30000000 <_stack_top+0x1fffe000>
 }
- 60c:	00008067          	ret
+ 838:	00008067          	ret
 
-00000610 <gpio_toggle_led>:
+0000083c <gpio_toggle_led>:
     GPIO_REG_DATA_OUT = current;
 }
 
 void gpio_toggle_led(uint8_t pin)
 {
     if (pin > 15) return;
- 610:	00f00793          	li	a5,15
- 614:	00a7ee63          	bltu	a5,a0,630 <gpio_toggle_led+0x20>
+ 83c:	00f00793          	li	a5,15
+ 840:	00a7ee63          	bltu	a5,a0,85c <gpio_toggle_led+0x20>
     GPIO_REG_DATA_OUT ^= (1UL << pin);
- 618:	30000737          	lui	a4,0x30000
- 61c:	00072683          	lw	a3,0(a4) # 30000000 <_stack_top+0x1fffe000>
- 620:	00100793          	li	a5,1
- 624:	00a797b3          	sll	a5,a5,a0
- 628:	00d7c7b3          	xor	a5,a5,a3
- 62c:	00f72023          	sw	a5,0(a4)
+ 844:	30000737          	lui	a4,0x30000
+ 848:	00072683          	lw	a3,0(a4) # 30000000 <_stack_top+0x1fffe000>
+ 84c:	00100793          	li	a5,1
+ 850:	00a79533          	sll	a0,a5,a0
+ 854:	00d54533          	xor	a0,a0,a3
+ 858:	00a72023          	sw	a0,0(a4)
 }
- 630:	00008067          	ret
+ 85c:	00008067          	ret
 
-00000634 <__divsi3>:
- 634:	06054063          	bltz	a0,694 <__umodsi3+0x10>
- 638:	0605c663          	bltz	a1,6a4 <__umodsi3+0x20>
+00000860 <__divsi3>:
+ 860:	06054063          	bltz	a0,8c0 <__umodsi3+0x10>
+ 864:	0605c663          	bltz	a1,8d0 <__umodsi3+0x20>
 
-0000063c <__hidden___udivsi3>:
- 63c:	00058613          	mv	a2,a1
- 640:	00050593          	mv	a1,a0
- 644:	fff00513          	li	a0,-1
- 648:	02060c63          	beqz	a2,680 <__hidden___udivsi3+0x44>
- 64c:	00100693          	li	a3,1
- 650:	00b67a63          	bgeu	a2,a1,664 <__hidden___udivsi3+0x28>
- 654:	00c05863          	blez	a2,664 <__hidden___udivsi3+0x28>
- 658:	00161613          	slli	a2,a2,0x1
- 65c:	00169693          	slli	a3,a3,0x1
- 660:	feb66ae3          	bltu	a2,a1,654 <__hidden___udivsi3+0x18>
- 664:	00000513          	li	a0,0
- 668:	00c5e663          	bltu	a1,a2,674 <__hidden___udivsi3+0x38>
- 66c:	40c585b3          	sub	a1,a1,a2
- 670:	00d56533          	or	a0,a0,a3
- 674:	0016d693          	srli	a3,a3,0x1
- 678:	00165613          	srli	a2,a2,0x1
- 67c:	fe0696e3          	bnez	a3,668 <__hidden___udivsi3+0x2c>
- 680:	00008067          	ret
+00000868 <__udivsi3>:
+ 868:	00058613          	mv	a2,a1
+ 86c:	00050593          	mv	a1,a0
+ 870:	fff00513          	li	a0,-1
+ 874:	02060c63          	beqz	a2,8ac <__udivsi3+0x44>
+ 878:	00100693          	li	a3,1
+ 87c:	00b67a63          	bgeu	a2,a1,890 <__udivsi3+0x28>
+ 880:	00c05863          	blez	a2,890 <__udivsi3+0x28>
+ 884:	00161613          	slli	a2,a2,0x1
+ 888:	00169693          	slli	a3,a3,0x1
+ 88c:	feb66ae3          	bltu	a2,a1,880 <__udivsi3+0x18>
+ 890:	00000513          	li	a0,0
+ 894:	00c5e663          	bltu	a1,a2,8a0 <__udivsi3+0x38>
+ 898:	40c585b3          	sub	a1,a1,a2
+ 89c:	00d56533          	or	a0,a0,a3
+ 8a0:	0016d693          	srli	a3,a3,0x1
+ 8a4:	00165613          	srli	a2,a2,0x1
+ 8a8:	fe0696e3          	bnez	a3,894 <__udivsi3+0x2c>
+ 8ac:	00008067          	ret
 
-00000684 <__umodsi3>:
- 684:	00008293          	mv	t0,ra
- 688:	fb5ff0ef          	jal	63c <__hidden___udivsi3>
- 68c:	00058513          	mv	a0,a1
- 690:	00028067          	jr	t0
- 694:	40a00533          	neg	a0,a0
- 698:	00b04863          	bgtz	a1,6a8 <__umodsi3+0x24>
- 69c:	40b005b3          	neg	a1,a1
- 6a0:	f9dff06f          	j	63c <__hidden___udivsi3>
- 6a4:	40b005b3          	neg	a1,a1
- 6a8:	00008293          	mv	t0,ra
- 6ac:	f91ff0ef          	jal	63c <__hidden___udivsi3>
- 6b0:	40a00533          	neg	a0,a0
- 6b4:	00028067          	jr	t0
+000008b0 <__umodsi3>:
+ 8b0:	00008293          	mv	t0,ra
+ 8b4:	fb5ff0ef          	jal	ra,868 <__udivsi3>
+ 8b8:	00058513          	mv	a0,a1
+ 8bc:	00028067          	jr	t0
+ 8c0:	40a00533          	neg	a0,a0
+ 8c4:	0005d863          	bgez	a1,8d4 <__umodsi3+0x24>
+ 8c8:	40b005b3          	neg	a1,a1
+ 8cc:	f9dff06f          	j	868 <__udivsi3>
+ 8d0:	40b005b3          	neg	a1,a1
+ 8d4:	00008293          	mv	t0,ra
+ 8d8:	f91ff0ef          	jal	ra,868 <__udivsi3>
+ 8dc:	40a00533          	neg	a0,a0
+ 8e0:	00028067          	jr	t0
 
-000006b8 <__modsi3>:
- 6b8:	00008293          	mv	t0,ra
- 6bc:	0005ca63          	bltz	a1,6d0 <__modsi3+0x18>
- 6c0:	00054c63          	bltz	a0,6d8 <__modsi3+0x20>
- 6c4:	f79ff0ef          	jal	63c <__hidden___udivsi3>
- 6c8:	00058513          	mv	a0,a1
- 6cc:	00028067          	jr	t0
- 6d0:	40b005b3          	neg	a1,a1
- 6d4:	fe0558e3          	bgez	a0,6c4 <__modsi3+0xc>
- 6d8:	40a00533          	neg	a0,a0
- 6dc:	f61ff0ef          	jal	63c <__hidden___udivsi3>
- 6e0:	40b00533          	neg	a0,a1
- 6e4:	00028067          	jr	t0
+000008e4 <__modsi3>:
+ 8e4:	00008293          	mv	t0,ra
+ 8e8:	0005ca63          	bltz	a1,8fc <__modsi3+0x18>
+ 8ec:	00054c63          	bltz	a0,904 <__modsi3+0x20>
+ 8f0:	f79ff0ef          	jal	ra,868 <__udivsi3>
+ 8f4:	00058513          	mv	a0,a1
+ 8f8:	00028067          	jr	t0
+ 8fc:	40b005b3          	neg	a1,a1
+ 900:	fe0558e3          	bgez	a0,8f0 <__modsi3+0xc>
+ 904:	40a00533          	neg	a0,a0
+ 908:	f61ff0ef          	jal	ra,868 <__udivsi3>
+ 90c:	40b00533          	neg	a0,a1
+ 910:	00028067          	jr	t0

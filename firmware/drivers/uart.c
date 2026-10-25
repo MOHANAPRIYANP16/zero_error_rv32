@@ -10,12 +10,12 @@ void uart_putc(char c)
 {
     // Auto-convert LF to CRLF for standard serial terminals
     if (c == '\n') {
-        while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
+        while (UART_REG_STATUS & UART_STATUS_TX_FULL)
             ;
         UART_REG_DATA = (uint32_t)'\r';
     }
 
-    while (UART_REG_STATUS & UART_STATUS_TX_BUSY)
+    while (UART_REG_STATUS & UART_STATUS_TX_FULL)
         ;
     UART_REG_DATA = (uint32_t)(uint8_t)c;
 }

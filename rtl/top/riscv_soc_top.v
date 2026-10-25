@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 // ============================================================================
-// riscv_soc_top.v -- Top-level SoC Module
+// riscv_soc_top.v -- Top-level SoC Module with Dual Hardware UARTs
 //
 // Integrates:
 //   - Custom RV32I Processor Core (Full standard instruction set)
@@ -9,23 +9,28 @@
 //   - Dual-Port Code Memory (4 KB) with $readmemh initialization
 //   - Data RAM (8 KB) with byte strobes
 //   - 32-bit GPIO (16 LEDs out, 16 inputs)
-//   - UART Peripheral (Configurable 9600 to 115200 baud, TX/RX)
-//   - I2C Peripheral (Configurable 100k/400k, multi-byte read, open-drain)
+//   - UART0 Peripheral (0x2000_0000): PC USB-UART console / bootloader (16-byte FIFO)
+//   - UART1 Peripheral (0x5000_0000): R307 Fingerprint sensor on Pmod A (16-byte FIFO)
+//   - I2C Peripheral (0x4000_0000): Sensors (Configurable 100k/400k)
 // ============================================================================
 
 module riscv_soc_top #(
     parameter CLK_FREQ   = 100_000_000,
-    parameter CODE_WORDS = 1024,
+    parameter CODE_WORDS = 4096,
     parameter DATA_WORDS = 2048,
     parameter INIT_FILE  = "instruction.mem"
 )(
     input  wire        clk,
     input  wire        rst_n,
-    input  wire        clk_en, // Clock enable for 25 MHz effective rate (1'b1 in 25MHz sim)
+    input  wire        clk_en, // Clock enable for 25 MHz effective rate
 
-    // UART
+    // UART0: PC USB-to-UART Bridge
     input  wire        UART_rxd,
     output wire        UART_txd,
+
+    // UART1: R307 Fingerprint Sensor on Pmod A
+    input  wire        UART1_rxd,
+    output wire        UART1_txd,
 
     // I2C
     inout  wire        sda,
@@ -70,6 +75,9 @@ module riscv_soc_top #(
 
     wire        i2c_sel,   i2c_valid,   i2c_ready;
     wire [31:0] i2c_rdata;
+
+    wire        uart1_sel, uart1_valid, uart1_ready;
+    wire [31:0] uart1_rdata;
 
     // ------------------------------------------------------------------------
     // RV32I CPU Core
@@ -127,7 +135,12 @@ module riscv_soc_top #(
         .i2c_sel(i2c_sel),
         .i2c_valid(i2c_valid),
         .i2c_ready(i2c_ready),
-        .i2c_rdata(i2c_rdata)
+        .i2c_rdata(i2c_rdata),
+
+        .uart1_sel(uart1_sel),
+        .uart1_valid(uart1_valid),
+        .uart1_ready(uart1_ready),
+        .uart1_rdata(uart1_rdata)
     );
 
     // ------------------------------------------------------------------------
@@ -161,11 +174,11 @@ module riscv_soc_top #(
     );
 
     // ------------------------------------------------------------------------
-    // UART Peripheral (0x2000_0000)
+    // UART0 Peripheral (0x2000_0000) -- PC USB-UART Terminal / Bootloader
     // ------------------------------------------------------------------------
     uart_peripheral #(
         .CLK_FREQ(CLK_FREQ)
-    ) uart_inst (
+    ) uart0_inst (
         .clk(clk),
         .rst_n(rst_n),
         .uart_sel(uart_sel),
@@ -177,6 +190,25 @@ module riscv_soc_top #(
         .uart_rdata(uart_rdata),
         .UART_rxd(UART_rxd),
         .UART_txd(UART_txd)
+    );
+
+    // ------------------------------------------------------------------------
+    // UART1 Peripheral (0x5000_0000) -- R307 Fingerprint Sensor on Pmod A
+    // ------------------------------------------------------------------------
+    uart_peripheral #(
+        .CLK_FREQ(CLK_FREQ)
+    ) uart1_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .uart_sel(uart1_sel),
+        .uart_valid(uart1_valid),
+        .uart_addr(mem_addr),
+        .uart_wdata(mem_wdata),
+        .uart_wstrb(mem_wstrb),
+        .uart_ready(uart1_ready),
+        .uart_rdata(uart1_rdata),
+        .UART_rxd(UART1_rxd),
+        .UART_txd(UART1_txd)
     );
 
     // ------------------------------------------------------------------------
