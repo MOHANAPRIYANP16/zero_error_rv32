@@ -1,8 +1,3 @@
-## ============================================================================
-## boolean_board.xdc -- Physical Constraints for Real Digital Boolean Board
-## Target FPGA: Xilinx Spartan-7 XC7S50-CSGA324-1
-## ============================================================================
-
 # System Clock (100 MHz on-board oscillator)
 set_property -dict {PACKAGE_PIN F14 IOSTANDARD LVCMOS33} [get_ports clk]
 create_clock -period 10.000 -name sys_clk [get_ports clk]
