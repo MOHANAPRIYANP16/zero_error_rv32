@@ -1,18 +1,16 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// gpio_peripheral.v -- 32-bit GPIO Peripheral
-//
-// Base Address: 0x3000_0000
-// Registers:
-//   Offset 0x00: GPIO_DATA_OUT [31:0]
-//                - bits [15:0]  : drives 16 LEDs
-//                - bits [31:16] : read as zero, write ignored
-//   Offset 0x04: GPIO_DATA_IN  [31:0]
-//                - bits [15:0]  : inputs from switches/buttons
-//                - bits [31:16] : read as zero
-//   Offset 0x08: GPIO_DIR      [31:0] (Reserved / Direction register)
-// ============================================================================
+/*  gpio_peripheral.v -- 32-bit GPIO Peripheral
+    Base Address: 0x3000_0000
+    Registers:
+        Offset 0x00: GPIO_DATA_OUT [31:0]
+            - bits [15:0]  : drives 16 LEDs
+            - bits [31:16] : read as zero, write ignored
+       Offset 0x04: GPIO_DATA_IN  [31:0]
+            - bits [15:0]  : inputs from switches/buttons
+            - bits [31:16] : read as zero
+       Offset 0x08: GPIO_DIR      [31:0] (Reserved / Direction register)
+*/
 
 module gpio_peripheral (
     input  wire        clk,
@@ -58,7 +56,7 @@ module gpio_peripheral (
                     default: gpio_rdata <= 32'd0;
                 endcase
 
-                // Register Write (supports byte write strobes)
+                // Register Write 
                 case (reg_offset)
                     4'h0: begin
                         if (gpio_wstrb[0]) led_reg[7:0]  <= gpio_wdata[7:0];
