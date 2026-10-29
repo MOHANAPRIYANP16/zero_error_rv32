@@ -11,7 +11,7 @@ module load_store_unit (
     output reg  [31:0] formatted_load_data
 );
 
-    // Store formatting & byte write strobe generation
+    // Store logic
     always @(*) begin
         byte_en        = 4'b0000;
         write_data_mem = 32'd0;
@@ -50,7 +50,7 @@ module load_store_unit (
         end
     end
 
-    // Load formatting & sign/zero extension
+    // Load logic
     reg [7:0]  selected_byte;
     reg [15:0] selected_half;
 
