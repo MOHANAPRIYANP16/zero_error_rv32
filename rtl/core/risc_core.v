@@ -7,7 +7,7 @@ module risc_core (
     input  wire [31:0] instruction,
     output wire [31:0] pc_out,
 
-    // PicoRV32-compatible native memory bus master interface
+    // native memory bus master interface
     output wire        mem_valid,
     output wire        mem_instr,
     input  wire        mem_ready,
@@ -19,7 +19,6 @@ module risc_core (
     output wire        illegal_instruction
 );
 
-    // Internal wires
     wire [31:0] pc_update, pc_out_int, imm, write_data;
     wire [31:0] read_data_1, read_data_2, ALU_result, Branch_target;
     wire [31:0] ALUSrc_out, pc_plus_four, formatted_load_data, write_data_mem;
@@ -29,8 +28,7 @@ module risc_core (
     wire        MemRead, MemWrite, jump, jalr, lui, auipc;
     wire        branch_taken, stall;
 
-    // Bus handshake and stall generation:
-    // Core stalls on a data memory access (load or store) until slave asserts mem_ready
+    
     assign mem_valid = (MemRead | MemWrite);
     assign mem_instr = 1'b0;
     assign mem_addr  = ALU_result;
@@ -38,7 +36,6 @@ module risc_core (
     assign mem_wstrb = MemWrite ? byte_en : 4'b0000;
     assign stall     = mem_valid & !mem_ready;
 
-    // Program Counter
     pc pc_block (
         .clk(clk),
         .rst_n(rst_n),
@@ -48,7 +45,6 @@ module risc_core (
         .pc_out(pc_out_int)
     );
 
-    // PC + 4 and Branch/Jump Mux (JALR bit 0 cleared)
     pc_plus_4 plus_4 (
         .pc_out(pc_out_int),
         .Branch_target(Branch_target),
@@ -60,14 +56,12 @@ module risc_core (
         .next_pc(pc_update)
     );
 
-    // PC Offset Adder
     pc_offset_adder offset_add (
         .PC(pc_out_int),
         .imm(imm),
         .Branch_target(Branch_target)
     );
 
-    // Register File (x0 hardwired to 0)
     register_file rf_block (
         .clk(clk),
         .rst_n(rst_n),
@@ -82,13 +76,11 @@ module risc_core (
         .read_data_2(read_data_2)
     );
 
-    // Immediate Generator
     immediate_generator imm_gen (
         .instruction(instruction),
         .imm(imm)
     );
 
-    // Control Unit
     control_unit cu_block (
         .opcode(instruction[6:0]),
         .ALUSrc(ALUSrc),
@@ -105,7 +97,6 @@ module risc_core (
         .illegal_instruction(illegal_instruction)
     );
 
-    // Branch Comparator
     branch_comparator br_comp (
         .funct3(instruction[14:12]),
         .rs1(read_data_1),
@@ -113,7 +104,6 @@ module risc_core (
         .branch_taken(branch_taken)
     );
 
-    // ALU Source Multiplexer
     alu_src_mux alusrc_block (
         .imm(imm),
         .read_data_2(read_data_2),
@@ -121,7 +111,6 @@ module risc_core (
         .ALUSrc_out(ALUSrc_out)
     );
 
-    // ALU Control Unit
     alu_control aluctrl_block (
         .ALUOp(ALUOp),
         .funct3(instruction[14:12]),
@@ -129,7 +118,6 @@ module risc_core (
         .ALUControl(ALUControl)
     );
 
-    // Arithmetic Logic Unit
     alu alu_block (
         .a(read_data_1),
         .b(ALUSrc_out),
@@ -138,7 +126,6 @@ module risc_core (
         .Zero(Zero)
     );
 
-    // Load / Store Unit
     load_store_unit lsu_block (
         .funct3(instruction[14:12]),
         .byte_offset(ALU_result[1:0]),
@@ -150,7 +137,6 @@ module risc_core (
         .formatted_load_data(formatted_load_data)
     );
 
-    // Write-Back Multiplexer
     write_back_mux wr_bk_mux (
         .MemtoReg(MemtoReg),
         .jump(jump),
