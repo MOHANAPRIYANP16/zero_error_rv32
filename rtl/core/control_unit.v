@@ -17,7 +17,7 @@ module control_unit (
 );
 
     always @(*) begin
-        // Defaults
+        // Default values to be assigned 
         ALUSrc              = 1'b0;
         MemtoReg            = 1'b0;
         MemRead             = 1'b0;
@@ -57,7 +57,7 @@ module control_unit (
                 ALUOp    = 2'b00; // ADD base + offset
             end
 
-            7'b1100011: begin // Conditional Branches
+            7'b1100011: begin // Branches
                 Branch   = 1'b1;
                 ALUOp    = 2'b01;
             end
