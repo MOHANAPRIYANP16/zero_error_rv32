@@ -39,14 +39,14 @@ module alu_control (
 
             2'b11: begin // I-type arithmetic & logic
                 case (funct3)
-                    3'b000:  ALUControl = ADD; // ADDI
-                    3'b001:  ALUControl = SLL; // SLLI
-                    3'b010:  ALUControl = SLT; // SLTI
-                    3'b011:  ALUControl = SLTU; // SLTIU
-                    3'b100:  ALUControl = XOR; // XORI
-                    3'b101:  ALUControl = funct7_5 ? SRA : SRL; // SRAI / SRLI
-                    3'b110:  ALUControl = OR;  // ORI
-                    3'b111:  ALUControl = AND; // ANDI
+                    3'b000:  ALUControl = ADD; 
+                    3'b001:  ALUControl = SLL; 
+                    3'b010:  ALUControl = SLT; 
+                    3'b011:  ALUControl = SLTU; 
+                    3'b100:  ALUControl = XOR; 
+                    3'b101:  ALUControl = funct7_5 ? SRA : SRL; 
+                    3'b110:  ALUControl = OR; 
+                    3'b111:  ALUControl = AND; 
                     default: ALUControl = ADD;
                 endcase
             end
