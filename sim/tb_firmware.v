@@ -1,13 +1,10 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_firmware.v -- Verification Testbench for Compiled C Firmware on RV32I SoC
-// ============================================================================
 
 module tb_firmware;
 
     reg clk = 0;
-    always #20 clk = ~clk; // 25 MHz clock (40ns period)
+    always #20 clk = ~clk; 
 
     reg rst_n = 0;
     wire clk_en = 1'b1;
@@ -43,10 +40,9 @@ module tb_firmware;
         .illegal_instruction (illegal_instruction)
     );
 
-    // UART RX monitoring: capture output bytes from SoC
     reg [7:0] rx_char = 0;
     always @(negedge UART_txd) begin
-        // Simple UART byte display at 115200 baud or for checking
+       
     end
 
     initial begin
@@ -60,7 +56,6 @@ module tb_firmware;
         rst_n = 1;
         $display("[%0t ns] Reset deasserted. CPU executing compiled C firmware...", $time);
 
-        // Monitor execution for 500 clock cycles
         repeat (500) begin
             @(posedge clk);
             if (illegal_instruction) begin
