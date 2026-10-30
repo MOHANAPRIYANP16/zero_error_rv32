@@ -1,28 +1,12 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_core_instructions.v -- Self-Checking RV32I Core Instruction Testbench
-//
-// Verifies:
-//   A. R-type: ADD, SUB, AND, OR, XOR, SLL, SRL, SRA, SLT, SLTU
-//   B. I-type: ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
-//   C. Loads: LB, LH, LW, LBU, LHU
-//   D. Stores: SB, SH, SW
-//   E. Branches: BEQ, BNE, BLT, BGE, BLTU, BGEU
-//   F. Jumps: JAL, JALR
-//   G. Upper-immediate: LUI, AUIPC
-//   H. MMIO: 32-bit GPIO LED output
-// ============================================================================
-
 module tb_core_instructions;
 
     reg clk = 0;
-    always #5 clk = ~clk; // 100 MHz clock
+    always #5 clk = ~clk; 
 
     reg rst_n = 0;
     wire clk_en = 1'b1;
-
-    // CPU - Memory Bus wires
     wire [31:0] pc_wire;
     wire [31:0] instruction_wire;
     wire        mem_valid;
@@ -34,7 +18,6 @@ module tb_core_instructions;
     wire [31:0] mem_rdata;
     wire        illegal_instruction;
 
-    // Bus Interconnect wires
     wire        code_sel, code_valid, code_ready;
     wire [31:0] code_rdata;
     wire        data_sel, data_valid, data_ready;
@@ -46,7 +29,6 @@ module tb_core_instructions;
     wire        i2c_sel,  i2c_valid,  i2c_ready;
     wire [31:0] i2c_rdata;
 
-    // Core under test
     risc_core dut_core (
         .clk(clk),
         .rst_n(rst_n),
@@ -63,7 +45,6 @@ module tb_core_instructions;
         .illegal_instruction(illegal_instruction)
     );
 
-    // Memory Bus Multiplexer
     soc_bus_interconnect bus_mux (
         .clk(clk),
         .rst_n(rst_n),
@@ -101,7 +82,6 @@ module tb_core_instructions;
         .i2c_rdata(i2c_rdata)
     );
 
-    // Memory subsystem with test_all_instructions.mem preloaded
     ram_sync #(
         .CODE_WORDS(1024),
         .DATA_WORDS(2048),
@@ -129,7 +109,6 @@ module tb_core_instructions;
         .data_rdata(data_rdata)
     );
 
-    // GPIO instance for MMIO verification
     wire [15:0] led_out;
     gpio_peripheral gpio_inst (
         .clk(clk),
@@ -177,17 +156,14 @@ module tb_core_instructions;
         #25;
         rst_n = 1;
 
-        // Run until program reaches end loop at PC = 0xC8 or timeout
         while (pc_wire != 32'h0000_00C8 && $time < 100000) begin
             @(posedge clk);
         end
-
-        // Extra clock cycles to let writebacks settle
+        
         repeat (10) @(posedge clk);
 
         $display("Program execution reached PC = 0x%08h at time %0t ns", pc_wire, $time);
 
-        // Verification checks
         $display("\n--- Checking Group G: Upper Immediate Instructions ---");
         check_reg(2, 32'h12345000, "LUI   x2, 0x12345");
         check_reg(3, 32'h00001004, "AUIPC x3, 0x00001");
