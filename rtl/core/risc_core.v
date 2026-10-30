@@ -6,8 +6,6 @@ module risc_core (
     input  wire        clk_en,
     input  wire [31:0] instruction,
     output wire [31:0] pc_out,
-
-    // native memory bus master interface
     output wire        mem_valid,
     output wire        mem_instr,
     input  wire        mem_ready,
