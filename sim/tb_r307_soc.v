@@ -1,32 +1,13 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_r307_soc.v -- Comprehensive Self-Checking Testbench for Dual-UART SoC
-//                  and R307 Fingerprint Sensor Interface
-//
-// Verifies:
-//   1. Interconnect Address Decoding:
-//      - UART0 at 0x2000_0000 (PC USB-UART)
-//      - UART1 at 0x5000_0000 (R307 Fingerprint Sensor on Pmod A)
-//   2. Dual-UART Concurrent Operation:
-//      - Configuring baud rates (UART0 = 115200, UART1 = 57600)
-//      - Independent 16-entry TX & RX FIFOs on both UARTs
-//   3. R307 Fingerprint Protocol Communication:
-//      - CPU writes Verify Password command (0xEF01... 0x13) to UART1
-//      - Behavioral R307 sensor model receives and verifies command packet
-//      - Sensor model sends back ACK packet (0xEF01... 0x07, code 0x00)
-//      - CPU reads back ACK packet from UART1 RX FIFO
-//   4. GPIO LED status indication (LED14 = Success, LED15 = Failure)
-// ============================================================================
-
 module tb_r307_soc;
 
     reg clk = 0;
-    always #20 clk = ~clk; // 25.0 MHz MMCM clock (40 ns period)
+    always #20 clk = ~clk; 
 
     reg rst_n = 0;
 
-    // Bus Master Signals (Simulating CPU / Interconnect)
+   
     reg         mem_valid = 0;
     reg         mem_instr = 0;
     reg  [31:0] mem_addr  = 0;
@@ -64,9 +45,7 @@ module tb_r307_soc;
     // GPIO LED Lines
     wire [15:0] led;
 
-    // ------------------------------------------------------------------------
-    // Interconnect Instance
-    // ------------------------------------------------------------------------
+ 
     soc_bus_interconnect bus_mux (
         .clk(clk),
         .rst_n(rst_n),
@@ -109,9 +88,6 @@ module tb_r307_soc;
         .uart1_rdata(uart1_rdata)
     );
 
-    // ------------------------------------------------------------------------
-    // UART0 Peripheral Instance (0x2000_0000 - PC Console)
-    // ------------------------------------------------------------------------
     uart_peripheral #(
         .CLK_FREQ(25_000_000)
     ) uart0_inst (
@@ -128,9 +104,7 @@ module tb_r307_soc;
         .UART_txd(UART0_txd)
     );
 
-    // ------------------------------------------------------------------------
-    // UART1 Peripheral Instance (0x5000_0000 - R307 Fingerprint Sensor)
-    // ------------------------------------------------------------------------
+
     uart_peripheral #(
         .CLK_FREQ(25_000_000)
     ) uart1_inst (
@@ -147,9 +121,7 @@ module tb_r307_soc;
         .UART_txd(UART1_txd)
     );
 
-    // ------------------------------------------------------------------------
-    // 32-bit GPIO Peripheral Instance (0x3000_0000)
-    // ------------------------------------------------------------------------
+    
     gpio_peripheral gpio_inst (
         .clk(clk),
         .rst_n(rst_n),
@@ -164,9 +136,6 @@ module tb_r307_soc;
         .gpio_in(16'h0000)
     );
 
-    // ------------------------------------------------------------------------
-    // Behavioral R307 Sensor Model Connected to UART1
-    // ------------------------------------------------------------------------
     r307_sensor_model #(
         .BAUD_RATE(57600)
     ) sensor (
