@@ -1,15 +1,5 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// i2c_slave_model.v -- Behavioral I2C Sensor/Slave Model for Simulation
-//
-// Simulates a typical I2C sensor (e.g., ADXL345 accelerometer or similar):
-//   - 7-bit slave address matching SLAVE_ADDR (default 7'h53)
-//   - Internal register write and register read with repeated START
-//   - Multi-byte sequential read support (auto-incrementing register pointer)
-//   - Open-drain SDA output with pull-up behavior
-// ============================================================================
-
 module i2c_slave_model #(
     parameter SLAVE_ADDR = 7'h53
 )(
@@ -32,13 +22,12 @@ module i2c_slave_model #(
         for (i = 0; i < 256; i = i + 1)
             reg_mem[i] = 8'h00;
 
-        // Populate standard default sensor test registers
-        reg_mem[8'h00] = 8'hE5; // Device ID (e.g., ADXL345 DEVID)
+        reg_mem[8'h00] = 8'hE5; 
         reg_mem[8'h01] = 8'h12;
         reg_mem[8'h02] = 8'h34;
         reg_mem[8'h03] = 8'h56;
-        reg_mem[8'h2D] = 8'h08; // POWER_CTL register
-        reg_mem[8'h31] = 8'h0B; // DATA_FORMAT register
+        reg_mem[8'h2D] = 8'h08; 
+        reg_mem[8'h31] = 8'h0B; 
     end
 
     always @(posedge scl or posedge sda) begin
@@ -46,7 +35,6 @@ module i2c_slave_model #(
             bus_ready <= 1'b1;
     end
 
-    // FSM States
     localparam ST_IDLE         = 4'd0,
                ST_ADDR         = 4'd1,
                ST_ADDR_ACK     = 4'd2,
@@ -66,7 +54,6 @@ module i2c_slave_model #(
     reg       start_flag;
     reg       stop_flag;
 
-    // Asynchronous START condition detection
     always @(negedge sda or negedge scl) begin
         if (!scl || !bus_ready)
             start_flag <= 1'b0;
@@ -74,7 +61,6 @@ module i2c_slave_model #(
             start_flag <= 1'b1;
     end
 
-    // Asynchronous STOP condition detection
     always @(posedge sda or negedge scl) begin
         if (!scl || !bus_ready)
             stop_flag <= 1'b0;
@@ -84,7 +70,6 @@ module i2c_slave_model #(
 
     wire start_or_stop = start_flag | stop_flag;
 
-    // Main FSM on posedge SCL or START/STOP condition
     always @(posedge scl or posedge start_or_stop) begin
         if (start_or_stop) begin
             if (stop_flag) begin
@@ -164,10 +149,8 @@ module i2c_slave_model #(
 
                 ST_RD_ACK: begin
                     if (sda) begin
-                        // Master sent NACK -> End of read transfer
                         state <= ST_IDLE;
                     end else begin
-                        // Master sent ACK -> Auto-increment register address and read next byte
                         reg_addr      <= reg_addr + 1'b1;
                         cur_read_byte <= reg_mem[reg_addr + 1'b1];
                         bit_idx       <= 3'd7;
@@ -180,7 +163,6 @@ module i2c_slave_model #(
         end
     end
 
-    // SDA Output Driver on negedge SCL
     always @(negedge scl or posedge start_or_stop) begin
         if (start_or_stop) begin
             sda_drive <= 1'b0;
