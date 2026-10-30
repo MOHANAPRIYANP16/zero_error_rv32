@@ -1,41 +1,27 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// i2c_master.v -- Core I2C Master FSM supporting Write, Multi-Byte Read,
-//                 and Repeated START
-// ============================================================================
-
 module i2c_master (
     input  wire       clk,
     input  wire       rst_n,
-
-    // Command interface
     input  wire       start_cmd,
     input  wire [6:0] slv_addr,
-    input  wire       rwbar,       // 0: Write, 1: Read
+    input  wire       rwbar,      
     input  wire [7:0] reg_addr,
     input  wire [7:0] wr_data,
     input  wire [2:0] byte_cnt,
-
-    // Status interface
     output reg        busy,
     output reg        done,
     output reg        err,
 
-    // Received data buffer
     output reg  [7:0] rd_data0,
     output reg  [7:0] rd_data1,
     output reg  [7:0] rd_data2,
     output reg  [7:0] rd_data3,
-
-    // SCL Generator interface
     output reg        scl_trig,
     input  wire       phase_fall,
     input  wire       phase_low,
     input  wire       phase_rise,
     input  wire       phase_high,
-
-    // SDA interface
     input  wire       sda_in,
     output reg        sda_oe
 );
@@ -70,8 +56,7 @@ module i2c_master (
     reg [7:0] read_buf [0:7];
 
     integer i;
-
-    // Buffer outputs
+    
     always @(*) begin
         rd_data0 = read_buf[0];
         rd_data1 = read_buf[1];
@@ -107,15 +92,15 @@ module i2c_master (
                 end
 
                 START1: begin
-                    sda_oe   <= 1'b0; // Release SDA
-                    scl_trig <= 1'b1; // Start SCL clock generator
+                    sda_oe   <= 1'b0; 
+                    scl_trig <= 1'b1; 
                     state    <= START2;
                 end
 
                 START2: begin
                     if (phase_high) begin
-                        sda_oe    <= 1'b1; // Pull SDA low while SCL is high -> START
-                        shift_reg <= {slv_addr, 1'b0}; // First phase is always write (address)
+                        sda_oe    <= 1'b1; 
+                        shift_reg <= {slv_addr, 1'b0}; 
                         bit_cnt   <= 3'd7;
                         state     <= SLAVE_ADDR_W;
                     end
@@ -135,7 +120,7 @@ module i2c_master (
 
                 WAIT_ACK1: begin
                     if (phase_low) begin
-                        sda_oe <= 1'b0; // Release SDA for slave ACK
+                        sda_oe <= 1'b0; 
                         state  <= ACK1;
                     end
                 end
@@ -143,7 +128,7 @@ module i2c_master (
                 ACK1: begin
                     if (phase_high) begin
                         if (sda_in) begin
-                            state <= ERROR; // NACK received
+                            state <= ERROR; 
                         end else begin
                             shift_reg <= reg_addr;
                             bit_cnt   <= 3'd7;
@@ -214,8 +199,8 @@ module i2c_master (
 
                 RESTART: begin
                     if (phase_high) begin
-                        sda_oe    <= 1'b1; // Repeated start
-                        shift_reg <= {slv_addr, 1'b1}; // Read address
+                        sda_oe    <= 1'b1; 
+                        shift_reg <= {slv_addr, 1'b1}; 
                         bit_cnt   <= 3'd7;
                         state     <= SLAVE_ADDR_R;
                     end
@@ -265,11 +250,10 @@ module i2c_master (
 
                 WAIT_ACK5: begin
                     if (phase_low) begin
-                        // Master ACK if more bytes, NACK on last byte
                         if (count == (byte_cnt - 1'b1) || byte_cnt == 3'd0)
-                            sda_oe <= 1'b0; // Master NACK
+                            sda_oe <= 1'b0; 
                         else
-                            sda_oe <= 1'b1; // Master ACK
+                            sda_oe <= 1'b1; 
                         state <= ACK5;
                     end
                 end
@@ -292,7 +276,7 @@ module i2c_master (
                     if (phase_rise) begin
                         sda_oe <= 1'b1;
                     end else if (phase_high) begin
-                        sda_oe <= 1'b0; // Release SDA while SCL is high -> STOP
+                        sda_oe <= 1'b0; 
                         state  <= STOP2;
                     end
                 end
