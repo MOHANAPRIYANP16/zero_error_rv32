@@ -1,9 +1,5 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_i2c.v -- Self-Checking Unit Testbench for I2C Peripheral with Behavioral Slave
-// ============================================================================
-
 module tb_i2c;
 
     reg clk = 0;
