@@ -1,19 +1,5 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_soc_top.v -- Comprehensive Top-Level SoC Integration Testbench
-//
-// Verifies:
-//   - SoC reset deassertion & startup
-//   - Instruction preloading from instruction.mem at reset address 0x0000_0000
-//   - CPU execution of RV32I instruction suite through memory subsystem
-//   - Data RAM read/write transactions via native memory bus
-//   - 32-bit GPIO peripheral actuation (driving LEDs = 0x0055)
-//   - UART peripheral interface ready & idle state
-//   - I2C peripheral bus with external sensor slave model
-//   - Infinite loop termination at PC = 0x0000_00C8
-// ============================================================================
-
 module tb_soc_top;
 
     reg clk = 0;
