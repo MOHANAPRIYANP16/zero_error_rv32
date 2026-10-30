@@ -1,19 +1,5 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// riscv_soc_top.v -- Top-level SoC Module with Dual Hardware UARTs
-//
-// Integrates:
-//   - Custom RV32I Processor Core (Full standard instruction set)
-//   - Native PicoRV32 Memory Bus Interconnect
-//   - Dual-Port Code Memory (4 KB) with $readmemh initialization
-//   - Data RAM (8 KB) with byte strobes
-//   - 32-bit GPIO (16 LEDs out, 16 inputs)
-//   - UART0 Peripheral (0x2000_0000): PC USB-UART console / bootloader (16-byte FIFO)
-//   - UART1 Peripheral (0x5000_0000): R307 Fingerprint sensor on Pmod A (16-byte FIFO)
-//   - I2C Peripheral (0x4000_0000): Sensors (Configurable 100k/400k)
-// ============================================================================
-
 module riscv_soc_top #(
     parameter CLK_FREQ   = 100_000_000,
     parameter CODE_WORDS = 4096,
@@ -22,13 +8,13 @@ module riscv_soc_top #(
 )(
     input  wire        clk,
     input  wire        rst_n,
-    input  wire        clk_en, // Clock enable for 25 MHz effective rate
+    input  wire        clk_en, 
 
-    // UART0: PC USB-to-UART Bridge
+    // UART0: PC USB to UART Bridge
     input  wire        UART_rxd,
     output wire        UART_txd,
 
-    // UART1: R307 Fingerprint Sensor on Pmod A
+    // UART1: external application
     input  wire        UART1_rxd,
     output wire        UART1_txd,
 
@@ -39,19 +25,14 @@ module riscv_soc_top #(
     // GPIO
     output wire [15:0] led,
     input  wire [15:0] gpio_in,
-
-    // Observability / Debug
     output wire [31:0] pc_out,
     output wire        illegal_instruction
 );
 
-    // Instruction bus
     wire [31:0] pc_wire;
     wire [31:0] instruction_wire;
 
     assign pc_out = pc_wire;
-
-    // CPU native bus master wires
     wire        mem_valid;
     wire        mem_instr;
     wire        mem_ready;
@@ -60,7 +41,6 @@ module riscv_soc_top #(
     wire [3:0]  mem_wstrb;
     wire [31:0] mem_rdata;
 
-    // Interconnect slave wires
     wire        code_sel,  code_valid,  code_ready;
     wire [31:0] code_rdata;
 
@@ -79,9 +59,6 @@ module riscv_soc_top #(
     wire        uart1_sel, uart1_valid, uart1_ready;
     wire [31:0] uart1_rdata;
 
-    // ------------------------------------------------------------------------
-    // RV32I CPU Core
-    // ------------------------------------------------------------------------
     risc_core cpu_core (
         .clk(clk),
         .rst_n(rst_n),
@@ -98,9 +75,6 @@ module riscv_soc_top #(
         .illegal_instruction(illegal_instruction)
     );
 
-    // ------------------------------------------------------------------------
-    // Native Memory Bus Interconnect
-    // ------------------------------------------------------------------------
     soc_bus_interconnect bus_mux (
         .clk(clk),
         .rst_n(rst_n),
@@ -143,9 +117,6 @@ module riscv_soc_top #(
         .uart1_rdata(uart1_rdata)
     );
 
-    // ------------------------------------------------------------------------
-    // Dual-Port Code Memory & Data RAM
-    // ------------------------------------------------------------------------
     ram_sync #(
         .CODE_WORDS(CODE_WORDS),
         .DATA_WORDS(DATA_WORDS),
@@ -173,9 +144,6 @@ module riscv_soc_top #(
         .data_rdata(data_rdata)
     );
 
-    // ------------------------------------------------------------------------
-    // UART0 Peripheral (0x2000_0000) -- PC USB-UART Terminal / Bootloader
-    // ------------------------------------------------------------------------
     uart_peripheral #(
         .CLK_FREQ(CLK_FREQ)
     ) uart0_inst (
@@ -192,9 +160,7 @@ module riscv_soc_top #(
         .UART_txd(UART_txd)
     );
 
-    // ------------------------------------------------------------------------
-    // UART1 Peripheral (0x5000_0000) -- R307 Fingerprint Sensor on Pmod A
-    // ------------------------------------------------------------------------
+
     uart_peripheral #(
         .CLK_FREQ(CLK_FREQ)
     ) uart1_inst (
@@ -210,10 +176,7 @@ module riscv_soc_top #(
         .UART_rxd(UART1_rxd),
         .UART_txd(UART1_txd)
     );
-
-    // ------------------------------------------------------------------------
-    // 32-bit GPIO Peripheral (0x3000_0000)
-    // ------------------------------------------------------------------------
+    
     gpio_peripheral gpio_inst (
         .clk(clk),
         .rst_n(rst_n),
@@ -228,9 +191,6 @@ module riscv_soc_top #(
         .gpio_in(gpio_in)
     );
 
-    // ------------------------------------------------------------------------
-    // I2C Peripheral (0x4000_0000)
-    // ------------------------------------------------------------------------
     i2c_peripheral #(
         .CLK_FREQ(CLK_FREQ)
     ) i2c_inst (
