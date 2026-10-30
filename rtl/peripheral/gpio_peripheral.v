@@ -1,17 +1,5 @@
 `timescale 1ns / 1ps
 
-/*  gpio_peripheral.v -- 32-bit GPIO Peripheral
-    Base Address: 0x3000_0000
-    Registers:
-        Offset 0x00: GPIO_DATA_OUT [31:0]
-            - bits [15:0]  : drives 16 LEDs
-            - bits [31:16] : read as zero, write ignored
-       Offset 0x04: GPIO_DATA_IN  [31:0]
-            - bits [15:0]  : inputs from switches/buttons
-            - bits [31:16] : read as zero
-       Offset 0x08: GPIO_DIR      [31:0] (Reserved / Direction register)
-*/
-
 module gpio_peripheral (
     input  wire        clk,
     input  wire        rst_n,
