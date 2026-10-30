@@ -1,18 +1,5 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_system_bus.v -- Self-Checking Testbench for PicoRV32 Native Bus & Address Decoder
-//
-// Verifies:
-//   - Code RAM access at 0x0000_0000
-//   - Data RAM access at 0x1000_0000
-//   - UART MMIO access at 0x2000_0000
-//   - GPIO MMIO access at 0x3000_0000
-//   - I2C MMIO access at 0x4000_0000
-//   - Unmapped address space (0x5000_0000) fallback termination (0xDEADBEEF)
-//   - Non-overlapping decoding and 1-wait-state handshakes
-// ============================================================================
-
 module tb_system_bus;
 
     reg clk = 0;
