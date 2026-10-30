@@ -1,21 +1,5 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_uart_fifo.v -- Comprehensive Self-Checking Testbench for UART TX & RX FIFOs
-//
-// Tests:
-//   1. Register read/write and default status flags
-//   2. TX FIFO Burst Write: Write 16 bytes at maximum bus clock speed
-//   3. TX Full Flag: Verify bit 3 is asserted when 16 bytes are queued
-//   4. Streaming Transmission: Verify back-to-back bit transmission over UART TX
-//   5. RX FIFO Burst Buffering: Receive 16 consecutive bytes in hardware without CPU
-//   6. RX Fill Level Tracking: Verify rx_count matches queued count
-//   7. FIFO Data Integrity: Read out all 16 bytes and verify exact FIFO byte order
-//   8. RX FIFO Empty / Valid Transition: Verify rx_valid clears when empty
-//   9. RX Overflow Detection: Push past 16 bytes and verify rx_overflow flag
-//  10. FIFO Flush Control: Verify clearing FIFOs via UART_STATUS_CLEAR
-// ============================================================================
-
 module tb_uart_fifo;
 
     reg clk = 0;
@@ -105,13 +89,9 @@ module tb_uart_fifo;
         #50;
         rst_n = 1;
         #30;
-
-        // Configure to 115200 baud for fast simulation
         bus_write(32'h2000_0008, 32'd4);
 
-        // --------------------------------------------------------------------
-        // TEST 1: Initial FIFO Status Checks
-        // --------------------------------------------------------------------
+
         $display("\n--- Test 1: Initial Status Flags ---");
         bus_read(32'h2000_0004, status);
         // Bit 0: tx_busy=0, Bit 1: rx_valid=0, Bit 3: tx_full=0, Bit 4: tx_empty=1, Bit 5: rx_empty=1
@@ -122,9 +102,6 @@ module tb_uart_fifo;
             errors = errors + 1;
         end
 
-        // --------------------------------------------------------------------
-        // TEST 2: TX FIFO Burst Writing (16 consecutive bytes at bus speed)
-        // --------------------------------------------------------------------
         $display("\n--- Test 2: TX FIFO Burst Writing (16 Bytes) ---");
         for (b = 0; b < 16; b = b + 1) begin
             bus_write(32'h2000_0000, b + 8'hA0); // Send 0xA0 to 0xAF
@@ -141,9 +118,7 @@ module tb_uart_fifo;
             errors = errors + 1;
         end
 
-        // --------------------------------------------------------------------
-        // TEST 3: Loopback Reception via RX FIFO
-        // --------------------------------------------------------------------
+
         $display("\n--- Test 3: Loopback RX FIFO Buffering & Verification ---");
         
         // Loop TX to RX in parallel
@@ -166,7 +141,7 @@ module tb_uart_fifo;
             end
         join_any
 
-        #10000; // Allow last byte stop bit to settle in RX FIFO
+        #10000; 
 
         // Check RX FIFO status
         bus_read(32'h2000_0004, status);
@@ -187,9 +162,7 @@ module tb_uart_fifo;
             errors = errors + 1;
         end
 
-        // --------------------------------------------------------------------
-        // TEST 4: Read out and verify FIFO byte ordering (First-In, First-Out)
-        // --------------------------------------------------------------------
+
         $display("\n--- Test 4: Reading and Verifying FIFO Ordering ---");
         for (b = 0; b < 16; b = b + 1) begin
             bus_read(32'h2000_0000, data_val);
@@ -201,7 +174,6 @@ module tb_uart_fifo;
             end
         end
 
-        // Check RX FIFO empty after reading 16th byte
         bus_read(32'h2000_0004, status);
         if (status[1] === 1'b0 && status[5] === 1'b1 && status[15:8] === 8'd0) begin
             $display("  [PASS] RX FIFO cleanly transitioned to empty (rx_valid=0, rx_empty=1, count=0)");
@@ -210,16 +182,13 @@ module tb_uart_fifo;
             errors = errors + 1;
         end
 
-        // --------------------------------------------------------------------
-        // TEST 5: FIFO Flush Control (UART_STATUS_CLEAR offset 0x0C)
-        // --------------------------------------------------------------------
         $display("\n--- Test 5: Testing FIFO Flush ---");
         // Push 3 bytes into TX FIFO
         bus_write(32'h2000_0000, 32'h11);
         bus_write(32'h2000_0000, 32'h22);
         bus_write(32'h2000_0000, 32'h33);
         
-        // Command FIFO flush (bit 1 of 0x0C)
+     
         bus_write(32'h2000_000C, 32'h0000_0002);
         
         bus_read(32'h2000_0004, status);
@@ -230,9 +199,6 @@ module tb_uart_fifo;
             errors = errors + 1;
         end
 
-        // --------------------------------------------------------------------
-        // FINAL SUMMARY
-        // --------------------------------------------------------------------
         $display("\n==================================================================");
         if (errors == 0) begin
             $display("   >>> ALL UART FIFO UNIT TESTS PASSED SUCCESSFULLY! (0 errors) <<<");
