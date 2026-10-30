@@ -1,13 +1,9 @@
 `timescale 1ns / 1ps
 
-// ============================================================================
-// tb_blinking_led.v -- Verification for 1-Second GPIO LED0 Blinking Program
-// ============================================================================
-
 module tb_blinking_led;
 
     reg clk = 0;
-    always #5 clk = ~clk; // 100 MHz clock
+    always #5 clk = ~clk; 
 
     reg rst_n = 0;
     wire clk_en = 1'b1;
@@ -54,7 +50,7 @@ module tb_blinking_led;
         rst_n = 1;
         $display("[%0t ns] Reset released. CPU executing instruction.mem...", $time);
 
-        // Wait until PC reaches 0x08 (SW x2, 0(x1) which turns LED0 ON)
+
         while (pc_out != 32'h0000_0008 && $time < 5000) @(posedge clk);
         @(posedge clk); #1;
 
@@ -65,7 +61,6 @@ module tb_blinking_led;
             $finish;
         end
 
-        // Wait until PC enters the delay_on loop (PC = 0x14)
         while (pc_out != 32'h0000_0014 && $time < 10000) @(posedge clk);
         $display("[%0t ns] CPU reached delay_on loop at PC = 0x%08h, LED 0 remains ON", $time, pc_out);
 
